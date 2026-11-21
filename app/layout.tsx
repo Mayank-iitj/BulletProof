@@ -6,11 +6,6 @@ export const metadata: Metadata = {
   title: 'BulletProof — The Resume Bullet Rewriter that A/B Tests Itself',
   description:
     'Paste a weak resume bullet, get three sharper versions. Powered by Flagsmith experimentation to empirically discover which AI rewrite style wins real jobs.',
-  openGraph: {
-    title: 'BulletProof — Battle-Tested AI Resume Rewriter',
-    description: '3 AI styles fight for your resume. Flagsmith experimentation decides the winner in public.',
-    type: 'website',
-  },
 };
 
 export default function RootLayout({
@@ -20,29 +15,29 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-bg text-text antialiased selection:bg-accent/20 selection:text-accent flex flex-col min-h-screen">
+      <body className="bg-[#0d1117] text-[#e6edf3] antialiased selection:bg-[#2f81f7]/30 selection:text-white flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-border/60 py-8 text-center text-xs text-muted">
-          <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <footer className="border-t border-[#30363d] py-6 text-xs text-[#7d8590] bg-[#010409]">
+          <div className="max-w-[1440px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-accent">[•] BulletProof</span>
+              <span className="font-mono text-[#2ea043] font-bold">BulletProof</span>
               <span>· Toggle Wars Hackathon</span>
             </div>
             <div className="flex items-center gap-4 text-xs">
-              <a href="/arena" className="hover:text-text transition-colors">
-                Live Arena
+              <a href="/arena" className="hover:text-[#58a6ff] transition-colors">
+                The Arena
               </a>
-              <a href="/method" className="hover:text-text transition-colors">
-                Experiment Methodology
+              <a href="/method" className="hover:text-[#58a6ff] transition-colors">
+                Methodology
               </a>
               <a
                 href="https://flagsmith.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent hover:underline"
+                className="text-[#2ea043] hover:underline"
               >
-                Built on Flagsmith
+                Powered by Flagsmith
               </a>
             </div>
           </div>

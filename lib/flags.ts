@@ -13,6 +13,11 @@ interface CachedFlags {
 const CACHE_TTL_MS = 60 * 1000;
 const memoryCache = new Map<string, CachedFlags>();
 
+export const liveOverrides = new Map<string, {
+  variant?: VariantKey;
+  killSwitch?: boolean;
+}>();
+
 export const DEFAULT_FLAGS = {
   rewrite_style: 'concise' as VariantKey,
   llm_kill_switch: false,
@@ -79,6 +84,13 @@ export async function evaluateFlags(
       model_config: DEFAULT_FLAGS.model_config,
       show_winner_banner: false,
     };
+
+    const override = liveOverrides.get(sessionId);
+    if (override) {
+      if (override.variant) flags.rewrite_style = override.variant;
+      if (typeof override.killSwitch === 'boolean') flags.llm_kill_switch = override.killSwitch;
+    }
+
     memoryCache.set(sessionId, { timestamp: now, flags });
     return { ...flags, fromCacheOrFallback: true };
   }
@@ -115,12 +127,19 @@ export async function evaluateFlags(
 
     const showWinner = identityFlags.isFeatureEnabled('show_winner_banner') ?? false;
 
-    const evaluated = {
+    let evaluated = {
       rewrite_style: style as VariantKey,
       llm_kill_switch: killSwitch,
       model_config: modelConfig,
       show_winner_banner: showWinner,
     };
+
+    // Apply interactive live session overrides if any
+    const override = liveOverrides.get(sessionId);
+    if (override) {
+      if (override.variant) evaluated.rewrite_style = override.variant;
+      if (typeof override.killSwitch === 'boolean') evaluated.llm_kill_switch = override.killSwitch;
+    }
 
     memoryCache.set(sessionId, { timestamp: now, flags: evaluated });
     return { ...evaluated, fromCacheOrFallback: false };

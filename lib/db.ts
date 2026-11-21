@@ -85,9 +85,7 @@ function saveDB(store: DBStore) {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    const tmpFile = `${DB_FILE}.tmp.${Date.now()}`;
-    fs.writeFileSync(tmpFile, JSON.stringify(store, null, 2), 'utf-8');
-    fs.renameSync(tmpFile, DB_FILE);
+    fs.writeFileSync(DB_FILE, JSON.stringify(store, null, 2), 'utf-8');
   } catch (err) {
     console.error('[DB] Failed to save database:', err);
   }
