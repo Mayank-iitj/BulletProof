@@ -1,4 +1,4 @@
-import { PDFParse } from 'pdf-parse';
+import { extractText } from 'unpdf';
 
 export interface ExtractedBullet {
   id: string;
@@ -59,22 +59,39 @@ const SECTION_HEADERS: Record<string, RegExp> = {
 };
 
 /**
- * Parses raw text from a PDF Buffer
+ * Parses raw text from a PDF Buffer with primary unpdf extraction and resilient regex fallback
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<{ text: string; pageCount: number }> {
-  const parser = new PDFParse({ data: buffer });
   try {
-    const result = await parser.getText();
-    const text = result?.text || '';
-    const pageCount = result?.total || result?.pages?.length || 1;
-    return { text, pageCount };
-  } finally {
-    try {
-      await parser.destroy();
-    } catch {
-      // Best-effort cleanup
+    const res = await extractText(buffer);
+    const combinedText = Array.isArray(res.text) ? res.text.join('\n') : (res.text || '');
+    const pageCount = res.totalPages || 1;
+
+    if (combinedText.trim().length > 0) {
+      return { text: combinedText, pageCount };
     }
+  } catch (err) {
+    console.warn('[extractTextFromPDF] unpdf primary extraction encountered error, attempting fallback:', err);
   }
+
+  // Resilient fallback for raw uncompressed PDF streams
+  try {
+    const raw = buffer.toString('latin1');
+    const matches: string[] = [];
+    const tjRegex = /\(([^()]+)\)\s*Tj/g;
+    let match: RegExpExecArray | null;
+    while ((match = tjRegex.exec(raw)) !== null) {
+      matches.push(match[1]);
+    }
+
+    if (matches.length > 0) {
+      return { text: matches.join(' '), pageCount: 1 };
+    }
+  } catch {
+    // Ignore fallback error
+  }
+
+  return { text: '', pageCount: 1 };
 }
 
 /**

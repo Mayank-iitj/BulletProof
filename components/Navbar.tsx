@@ -37,12 +37,22 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-[#010409] border-b border-[#30363d] px-4 py-2.5 text-xs text-[#e6edf3]">
-        <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-4">
+      <header
+        className="sticky top-0 z-40 bg-[#010409] border-b border-[#30363d] px-4 py-2.5 text-xs text-[#e6edf3]"
+        suppressHydrationWarning
+        data-dashlane-ignore="true"
+      >
+        <div
+          className="max-w-[1440px] mx-auto flex items-center justify-between gap-4"
+          suppressHydrationWarning
+          data-dashlane-ignore="true"
+        >
           {/* Left section: Hamburger, GitHub Mark, Breadcrumb */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" suppressHydrationWarning data-dashlane-ignore="true">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              suppressHydrationWarning
+              data-dashlane-ignore="true"
               className="p-1.5 rounded-md hover:bg-[#21262d] border border-[#30363d] text-[#8b949e] hover:text-[#e6edf3] md:hidden"
             >
               <Menu className="w-4 h-4" />
@@ -119,8 +129,8 @@ export function Navbar() {
           </div>
 
           {/* Center: GitHub Search Bar */}
-          <div className="flex-1 max-w-md hidden md:block">
-            <div className="relative flex items-center">
+          <div className="flex-1 max-w-md hidden md:block" suppressHydrationWarning data-dashlane-ignore="true">
+            <div className="relative flex items-center" suppressHydrationWarning data-dashlane-ignore="true">
               <Search className="w-3.5 h-3.5 absolute left-3 text-[#8b949e]" />
               <input
                 ref={searchInputRef}
@@ -177,6 +187,8 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setShowFlagsmithPanel(true)}
+                suppressHydrationWarning
+                data-dashlane-ignore="true"
                 className="p-1.5 rounded-md hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                 title="Flagsmith Flags"
               >
