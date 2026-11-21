@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0B0D12;
+  --surface: #141821;
+  --surface-2: #1C2230;
+  --text: #EDEFF5;
+  --muted: #8A93A6;
+  --border: #262D3D;
+  --accent: #7CFFB2;
+  --team-concise: #6EA8FF;
+  --team-impact: #FFB84D;
+  --team-story: #C792FF;
+  --danger: #FF6B6B;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0D12;
+}
+::-webkit-scrollbar-thumb {
+  background: #262D3D;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3B4459;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(20, 24, 33, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(38, 45, 61, 0.8);
+}
+
+.glass-card {
+  background: #141821;
+  border: 1px solid #262D3D;
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-card:hover {
+  border-color: rgba(124, 255, 178, 0.3);
+}
+
+/* Mono badge highlight for metrics like [X%] */
+.metric-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background-color: rgba(124, 255, 178, 0.12);
+  color: #7CFFB2;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(124, 255, 178, 0.3);
+  font-weight: 600;
+  display: inline-block;
+  margin: 0 0.15rem;
+}
