@@ -37,7 +37,7 @@ export function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  if (pathname === '/landing') {
+  if (pathname === '/' || pathname === '/landing') {
     return null;
   }
 
@@ -65,7 +65,7 @@ export function Navbar() {
             </button>
 
             {/* BulletProof Brand Mark */}
-            <Link href="/" className="flex items-center gap-2.5 group">
+            <Link href="/workbench" className="flex items-center gap-2.5 group">
               <div className="w-8 h-8 rounded-full bg-white border border-[#30363d] group-hover:border-[#58a6ff] flex items-center justify-center p-1 transition-all shadow-sm group-hover:shadow-[0_0_12px_rgba(88,166,255,0.35)] overflow-hidden">
                 <img
                   src="/bulletproof-icon.png"
@@ -82,7 +82,7 @@ export function Navbar() {
 
             <span className="text-[#8b949e] hidden sm:inline">/</span>
             <Link
-              href="/"
+              href="/workbench"
               className="text-xs font-semibold text-[#8b949e] hover:text-[#2f81f7] hidden sm:inline transition-colors"
             >
               BulletProof
@@ -91,6 +91,9 @@ export function Navbar() {
             {/* Quick Links */}
             <nav className="hidden lg:flex items-center gap-3 ml-4 text-xs font-medium text-[#8b949e]">
               <Link href="/" className="hover:text-[#e6edf3] transition-colors">
+                Landing
+              </Link>
+              <Link href="/workbench" className="hover:text-[#e6edf3] transition-colors text-white font-semibold">
                 Workbench
               </Link>
               <Link href="/arena" className="hover:text-[#e6edf3] transition-colors flex items-center gap-1">
@@ -99,13 +102,6 @@ export function Navbar() {
               </Link>
               <Link href="/method" className="hover:text-[#e6edf3] transition-colors">
                 Methodology
-              </Link>
-              <Link
-                href="/landing"
-                className="text-[#f0883e] hover:text-[#e6edf3] transition-colors flex items-center gap-1 font-semibold"
-                title="Bold Editorial Studio Landing Page"
-              >
-                <span>✦</span> Studio
               </Link>
             </nav>
           </div>

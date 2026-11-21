@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 
 export function Footer() {
   const pathname = usePathname();
-  if (pathname === '/landing') {
+  if (pathname === '/' || pathname === '/landing') {
     return null;
   }
 
@@ -19,10 +19,13 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-4 text-xs">
           <Link
-            href="/landing"
+            href="/"
             className="text-[#e6edf3] hover:text-[#58a6ff] transition-colors flex items-center gap-1 font-medium"
           >
-            <span>✦</span> Studio Landing
+            <span>✦</span> Landing Page
+          </Link>
+          <Link href="/workbench" className="hover:text-[#58a6ff] transition-colors">
+            Workbench
           </Link>
           <Link href="/arena" className="hover:text-[#58a6ff] transition-colors">
             The Arena

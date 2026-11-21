@@ -2,601 +2,725 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { HighlightedText } from '@/components/HighlightedText';
-import { Suggestion, VARIANT_METADATA, VariantKey } from '@/lib/types';
-import { Sidebar } from '@/components/Sidebar';
-import { RightRail } from '@/components/RightRail';
-import { FlagsmithControlPanel } from '@/components/FlagsmithControlPanel';
-import { ResumeUploader } from '@/components/ResumeUploader';
 import {
-  Send,
-  Check,
-  Copy,
-  RotateCw,
-  Sliders,
-  Filter,
-  ThumbsUp,
-  ThumbsDown,
-  AlertCircle,
-  HelpCircle,
-  Sparkles,
-  ChevronDown,
+  ArrowUpRight,
+  Plus,
+  X,
+  Shield,
+  Zap,
+  BarChart3,
   FileText,
+  Activity,
+  Layers,
+  Sparkles,
+  ChevronRight,
+  Cpu,
 } from 'lucide-react';
 
-const EXAMPLE_BULLETS = [
-  'Worked on backend of project',
-  'Responsible for customer support tickets and resolving issues',
-  'Helped improve database queries and made the app faster',
-  'Built a feature for user login and authentication',
-];
+export default function StudioLandingPage() {
+  // 1. Custom Interactive Difference Cursor with Lerp (lagging smooth interpolation)
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
+  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-const ROLES = [
-  'Autopilot (Default)',
-  'Backend Engineer',
-  'Frontend Developer',
-  'Full Stack Engineer',
-  'Product Manager',
-  'Data Scientist',
-];
-
-const DEFAULT_SUGGESTIONS: Suggestion[] = [
-  {
-    id: 's1',
-    text: 'Boosted throughput by [X%] by engineering backend microservices in Node.js, serving [N] daily requests without degradation.',
-  },
-  {
-    id: 's2',
-    text: 'Reduced query latency by [X%] by designing Redis caching layer, saving [$Y] in cloud compute overhead.',
-  },
-  {
-    id: 's3',
-    text: 'Automated CI/CD deployment pipelines across [N] repositories, accelerating developer release velocity by [X%].',
-  },
-];
-
-export default function WorkbenchPage() {
-  const [mounted, setMounted] = useState(false);
-  const [workbenchMode, setWorkbenchMode] = useState<'editor' | 'pdf'>('editor');
-  const [bullet, setBullet] = useState('');
-  const [role, setRole] = useState('Autopilot (Default)');
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>(DEFAULT_SUGGESTIONS);
-  const [rewriteId, setRewriteId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [revealToast, setRevealToast] = useState<{ variant: VariantKey; label: string } | null>(null);
-  const [ratings, setRatings] = useState<Record<string, 'up' | 'down'>>({});
-  const [error, setError] = useState<string | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
-  const [activeVariant, setActiveVariant] = useState<VariantKey>('impact');
-  const [showWinnerBanner, setShowWinnerBanner] = useState(false);
-  const [optInLogging, setOptInLogging] = useState(false);
-  const [showFlagsmithModal, setShowFlagsmithModal] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  const refreshFlags = async () => {
-    try {
-      const res = await fetch('/api/flagsmith/status');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.evaluatedFlags) {
-          setActiveVariant(data.evaluatedFlags.rewrite_style);
-          setIsPaused(Boolean(data.evaluatedFlags.llm_kill_switch));
-          setShowWinnerBanner(Boolean(data.evaluatedFlags.show_winner_banner));
-        }
-      }
-    } catch {}
-  };
-
+  // Track target mouse position
   useEffect(() => {
-    setMounted(true);
-    refreshFlags();
+    // Detect touch-only devices
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      setIsTouchDevice(true);
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Handle keyboard shortcut (Cmd/Ctrl + Enter)
+  // RequestAnimationFrame Lerp Loop
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        if (!loading && bullet.trim().length >= 10 && bullet.length <= 500) {
-          handleRewrite();
-        }
-      }
+    if (isTouchDevice) return;
+
+    let animationFrameId: number;
+    let currentX = cursorPos.x;
+    let currentY = cursorPos.y;
+
+    const render = () => {
+      // Lerp factor 0.16 for premium smooth inertia
+      currentX += (mousePos.x - currentX) * 0.16;
+      currentY += (mousePos.y - currentY) * 0.16;
+      setCursorPos({ x: currentX, y: currentY });
+
+      animationFrameId = requestAnimationFrame(render);
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [bullet, role, loading]);
 
-  const handleRewrite = async (isRegenerate = false) => {
-    if (bullet.trim().length < 10) {
-      setError('Please enter a bullet of at least 10 characters.');
-      return;
-    }
+    animationFrameId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [mousePos, isTouchDevice]);
 
-    if (bullet.length > 500) {
-      setError('Bullet exceeds 500 characters.');
-      return;
-    }
+  // Hover detection on interactive tags
+  const handleMouseEnterInteractive = () => setIsHovered(true);
+  const handleMouseLeaveInteractive = () => setIsHovered(false);
 
-    setError(null);
-    setLoading(true);
-    setCopiedId(null);
-    setRevealToast(null);
+  // Hero Staggered Characters
+  const heroLetters = 'BULLETPROOF'.split('');
 
-    try {
-      const selectedRole = role === 'Autopilot (Default)' ? undefined : role;
+  // Marquee Cards tailored for BulletProof with asymmetric corner radii
+  const marqueeCards = [
+    {
+      title: 'TEAM IMPACT',
+      stat: '44.1% WIN',
+      subtitle: 'Quantified Action Framing',
+      variant: 'A', // rounded-tl-[100px]
+      tag: 'LEADER VARIANT',
+      bgGradient: 'from-neutral-900 to-neutral-800',
+      textColor: 'text-white',
+    },
+    {
+      title: 'CONCISE METRIC',
+      stat: '31.8% WIN',
+      subtitle: 'Extreme Token Density',
+      variant: 'B', // rounded-tr-[100px] rounded-bl-[40px]
+      tag: 'EFFICIENCY',
+      bgGradient: 'from-neutral-200 to-neutral-300',
+      textColor: 'text-black',
+    },
+    {
+      title: 'EXECUTIVE STORY',
+      stat: '24.1% WIN',
+      subtitle: 'STAR Qualitative Context',
+      variant: 'C', // rounded-[40px]
+      tag: 'NARRATIVE',
+      bgGradient: 'from-neutral-800 to-neutral-700',
+      textColor: 'text-white',
+    },
+    {
+      title: 'FLAGSMITH EDGE',
+      stat: '0.01ms',
+      subtitle: 'Sub-millisecond Evaluation',
+      variant: 'A',
+      tag: 'INFRASTRUCTURE',
+      bgGradient: 'from-neutral-100 to-neutral-200',
+      textColor: 'text-black',
+    },
+    {
+      title: 'PDF SCANNER',
+      stat: '100% OCR',
+      subtitle: 'Deep Metric Isolation',
+      variant: 'B',
+      tag: 'DIAGNOSTIC',
+      bgGradient: 'from-neutral-900 to-neutral-800',
+      textColor: 'text-white',
+    },
+    {
+      title: 'SEQUENTIAL RIGOR',
+      stat: 'p > 0.05',
+      subtitle: 'SRM Chi-Square Guardrails',
+      variant: 'C',
+      tag: 'INTEGRITY',
+      bgGradient: 'from-neutral-300 to-neutral-200',
+      textColor: 'text-black',
+    },
+  ];
 
-      const res = await fetch('/api/rewrite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bullet: bullet.trim(), role: selectedRole, optIn: optInLogging }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.error?.code === 'AI_PAUSED') {
-          setIsPaused(true);
-          setError('AI generation paused via Flagsmith kill switch.');
-        } else if (data.error?.code === 'RATE_LIMITED') {
-          setError(`Rate limit reached. Please wait ${data.error.retryAfter || 30} seconds.`);
-        } else {
-          setError(data.error?.message || 'Failed to rewrite bullet.');
-        }
-        return;
-      }
-
-      setSuggestions(data.suggestions || []);
-      setRewriteId(data.rewriteId || null);
-    } catch {
-      setError('Network error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCopy = async (suggestion: Suggestion) => {
-    try {
-      await navigator.clipboard.writeText(suggestion.text);
-      setCopiedId(suggestion.id);
-
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'bullet_copied',
-          rewriteId,
-          suggestionId: suggestion.id,
-          props: { length: suggestion.text.length },
-        }),
-      });
-
-      const data = await res.json();
-      if (data.reveal) {
-        setRevealToast(data.reveal);
-      }
-
-      setTimeout(() => {
-        setCopiedId((curr) => (curr === suggestion.id ? null : curr));
-      }, 3500);
-    } catch {
-      // Fallback
-    }
-  };
-
-  const handleRating = async (suggestionId: string, value: 'up' | 'down') => {
-    setRatings((prev) => ({ ...prev, [suggestionId]: value }));
-
-    fetch('/api/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'rating_submitted',
-        rewriteId,
-        suggestionId,
-        props: { value },
-      }),
-    }).catch(() => {});
-  };
-
-  if (!mounted) {
-    return (
-      <div className="max-w-[1440px] mx-auto px-4 py-6" suppressHydrationWarning>
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          <div className="order-2 lg:order-1 w-full lg:w-72 h-80 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
-          <div className="order-1 lg:order-2 flex-1 w-full max-w-3xl space-y-5">
-            <div className="h-6 w-36 bg-[#161b22] rounded-md animate-pulse" />
-            <div className="h-44 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
-            <div className="h-60 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
-          </div>
-          <div className="order-3 w-full lg:w-80 h-72 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
-        </div>
-      </div>
-    );
-  }
+  // Project Grid items
+  const projects = [
+    {
+      id: '01',
+      title: 'The Rewrite Workbench',
+      category: 'INTERACTIVE AI REWRITER',
+      year: '2026',
+      href: '/',
+      description:
+        'Live multi-variant generation interface. Paste a weak bullet, receive three empirically tuned rewrites under active Flagsmith experimentation.',
+      tag: 'CORE ENGINE',
+    },
+    {
+      id: '02',
+      title: 'The Arena Experiment',
+      category: 'FLAGSMITH MULTIVARIATE TESTING',
+      year: '2026',
+      href: '/arena',
+      description:
+        'Transparent public leaderboard displaying live win rates, Wilson 95% confidence intervals, and automated rollout triggers.',
+      tag: 'A/B TESTING',
+    },
+    {
+      id: '03',
+      title: 'PDF Deep Scanner',
+      category: 'DOCUMENT EXTRACTION & AUDIT',
+      year: '2026',
+      href: '/?tab=pdf',
+      description:
+        'Single-click full PDF parser isolating experience sections, flagging passive openers, and diagnosing zero-metric statements.',
+      tag: 'NEW FEATURE',
+    },
+    {
+      id: '04',
+      title: 'Methodology & Safety',
+      category: 'STATISTICAL RIGOR & KILL-SWITCH',
+      year: '2026',
+      href: '/method',
+      description:
+        'Operational guardrails including Sample Ratio Mismatch (SRM) Chi-Square testing, p95 latency tracking, and emergency remote kill-switches.',
+      tag: 'SECURITY & OPS',
+    },
+  ];
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 py-6" suppressHydrationWarning>
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Left Sidebar (Desktop first, on mobile collapses below input) */}
-        <div className="order-2 lg:order-1 w-full lg:w-72">
-          <Sidebar
-            onNewBulletClick={() => {
-              setBullet('');
-              inputRef.current?.focus();
-            }}
-            onOpenFlagsmith={() => setShowFlagsmithModal(true)}
-          />
+    <div className="relative w-full min-h-screen bg-[#FFFFFF] text-[#000000] studio-cursor-none select-none font-sans overflow-x-hidden">
+      {/* Background white safety layer */}
+      <div className="fixed inset-0 bg-[#FFFFFF] -z-20 pointer-events-none" />
+
+      {/* 1. Custom Interactive Difference Cursor */}
+      {!isTouchDevice && (
+        <div
+          className={`fixed pointer-events-none z-[9999] rounded-full border border-black bg-white transition-transform duration-300 studio-ease ${
+            isHovered ? 'scale-[2.5]' : 'scale-100'
+          }`}
+          style={{
+            width: '32px',
+            height: '32px',
+            left: `${cursorPos.x - 16}px`,
+            top: `${cursorPos.y - 16}px`,
+            mixBlendMode: 'difference',
+          }}
+        />
+      )}
+
+      {/* 2. Fixed Navigation Header (mix-blend-mode: difference for visibility against all backgrounds) */}
+      <header className="fixed top-0 left-0 right-0 z-50 p-6 mix-blend-mode-difference flex items-center justify-between pointer-events-auto">
+        <Link
+          href="/"
+          onMouseEnter={handleMouseEnterInteractive}
+          onMouseLeave={handleMouseLeaveInteractive}
+          className="flex items-center gap-2 group"
+        >
+          {/* Lowercase logo 'sd' as specified in design brief */}
+          <span className="text-2xl font-bold tracking-tighter text-white lowercase">
+            sd
+          </span>
+          <span className="hidden sm:inline-block font-mono text-xs uppercase tracking-[0.1em] text-white/70 ml-2">
+            / BulletProof Studio
+          </span>
+        </Link>
+
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Link
+            href="/workbench"
+            onMouseEnter={handleMouseEnterInteractive}
+            onMouseLeave={handleMouseLeaveInteractive}
+            className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/30 text-white font-mono text-xs uppercase tracking-wider hover:bg-white hover:text-black transition-all duration-500 studio-ease"
+          >
+            <span>Enter Workbench</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+
+          {/* Plus icon Menu toggle */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            onMouseEnter={handleMouseEnterInteractive}
+            onMouseLeave={handleMouseLeaveInteractive}
+            className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:border-white transition-all duration-300"
+            aria-label="Toggle Studio Menu"
+          >
+            {menuOpen ? (
+              <X className="w-5 h-5 transition-transform duration-300" />
+            ) : (
+              <Plus className="w-5 h-5 transition-transform duration-300" />
+            )}
+          </button>
         </div>
+      </header>
 
-        {/* Center Main Dashboard Area */}
-        <div className="order-1 lg:order-2 flex-1 w-full max-w-3xl space-y-5">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-[#e6edf3]">Workbench</h1>
-              <span className="px-2 py-0.5 rounded-full border border-[#2ea043]/30 bg-[#2ea043]/10 text-[#2ea043] text-[11px] font-medium">
-                Live
-              </span>
-              <span className="px-2 py-0.5 rounded-full border border-[#30363d] bg-[#161b22] text-[#8b949e] font-mono text-[10px] hidden sm:inline-block">
-                Flagsmith: <strong className="text-[#58a6ff]">{activeVariant}</strong>
-              </span>
-            </div>
-            <button
-              onClick={() => setShowFlagsmithModal(true)}
-              className="text-xs text-[#8b949e] hover:text-[#2f81f7] flex items-center gap-1 font-mono transition-colors"
-            >
-              <span>Flagsmith Console</span>
-              <Sliders className="w-3.5 h-3.5 text-[#2ea043]" />
-            </button>
-          </div>
-
-          {/* Winner Banner if flag enabled in Flagsmith */}
-          {showWinnerBanner && (
-            <div className="p-3.5 rounded-xl border border-[#d29922]/40 bg-[#d29922]/10 flex items-center justify-between text-xs text-[#e6edf3]">
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-4 h-4 text-[#d29922] shrink-0" />
-                <div>
-                  <span className="font-semibold text-[#e6edf3]">Flagsmith Experiment Complete: </span>
-                  <span className="text-[#d29922]">Team Impact won with statistically significant 68.2% copy rate</span>
-                  <span className="text-[#8b949e]"> — now permanently rolled out to 100% of users.</span>
-                </div>
-              </div>
-              <Link href="/arena" className="text-[11px] font-mono text-[#58a6ff] hover:underline shrink-0 hidden sm:inline-block">
-                View Arena Stats →
-              </Link>
-            </div>
-          )}
-
-          {/* Paused alert if kill switch active */}
-          {isPaused && (
-            <div className="p-3.5 rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 text-[#f85149] text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>
-                AI Generation is paused via Flagsmith ops kill switch. Toggle off in Flagsmith Console to resume.
-              </span>
-            </div>
-          )}
-
-          {/* Mode Switcher: Single Bullet Rewriter vs Full PDF Scanner */}
-          <div className="flex items-center gap-1.5 border-b border-[#30363d] pb-2 text-xs">
-            <button
-              type="button"
-              onClick={() => setWorkbenchMode('editor')}
-              suppressHydrationWarning
-              data-dashlane-ignore="true"
-              className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-                workbenchMode === 'editor'
-                  ? 'bg-[#21262d] text-[#e6edf3] font-semibold border border-[#30363d]'
-                  : 'text-[#8b949e] hover:text-[#e6edf3]'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#58a6ff]" />
-              <span>Bullet Rewriter</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setWorkbenchMode('pdf')}
-              suppressHydrationWarning
-              data-dashlane-ignore="true"
-              className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-                workbenchMode === 'pdf'
-                  ? 'bg-[#21262d] text-[#e6edf3] font-semibold border border-[#30363d]'
-                  : 'text-[#8b949e] hover:text-[#e6edf3]'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5 text-[#2ea043]" />
-              <span>Upload PDF Resume</span>
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#2ea043]/10 text-[#2ea043] border border-[#2ea043]/30">
-                Live
-              </span>
-            </button>
-          </div>
-
-          {/* Conditional View: PDF Scanner or Copilot Input Box */}
-          {workbenchMode === 'pdf' ? (
-            <ResumeUploader
-              onSelectBullet={(selectedBullet, suggestedRole) => {
-                setBullet(selectedBullet);
-                if (suggestedRole && ROLES.includes(suggestedRole)) {
-                  setRole(suggestedRole);
-                }
-                setWorkbenchMode('editor');
-                setTimeout(() => {
-                  inputRef.current?.focus();
-                  handleRewrite();
-                }, 150);
-              }}
-            />
-          ) : (
-            <>
-              {/* GitHub Copilot Style Input Box */}
-              <div className="rounded-xl border border-[#30363d] bg-[#0d1117] focus-within:border-[#2f81f7] focus-within:ring-1 focus-within:ring-[#2f81f7] transition-all shadow-sm">
-            <div className="p-4">
-              <textarea
-                ref={inputRef}
-                rows={3}
-                value={bullet}
-                suppressHydrationWarning
-                data-dashlane-ignore="true"
-                autoComplete="off"
-                onChange={(e) => {
-                  setBullet(e.target.value);
-                  if (error) setError(null);
-                }}
-                placeholder="Paste a weak resume bullet (e.g. Worked on backend of project)..."
-                className="w-full bg-transparent text-[#e6edf3] placeholder:text-[#8b949e] text-sm focus:outline-none resize-none leading-relaxed"
-              />
-
-              {/* Bottom inner toolbar */}
-              <div className="flex items-center justify-between pt-3 border-t border-[#21262d]">
-                {/* Role / Mode dropdown */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] hover:bg-[#21262d] text-xs font-medium text-[#e6edf3] transition-colors"
-                  >
-                    <span>+</span>
-                    <span>{role}</span>
-                    <ChevronDown className="w-3 h-3 text-[#8b949e]" />
-                  </button>
-
-                  {roleDropdownOpen && (
-                    <div className="absolute left-0 mt-1 w-52 rounded-xl bg-[#161b22] border border-[#30363d] shadow-xl py-1 z-30">
-                      {ROLES.map((r, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => {
-                            setRole(r);
-                            setRoleDropdownOpen(false);
-                          }}
-                          className={`w-full px-3 py-1.5 text-left text-xs hover:bg-[#21262d] flex items-center justify-between ${
-                            role === r ? 'text-[#2f81f7] font-semibold' : 'text-[#e6edf3]'
-                          }`}
-                        >
-                          <span>{r}</span>
-                          {role === r && <Check className="w-3.5 h-3.5" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Right controls: character count & submit button */}
-                <div className="flex items-center gap-2.5">
-                  <span className={`text-[11px] font-mono ${bullet.length > 500 ? 'text-[#f85149] font-bold' : 'text-[#8b949e]'}`}>
-                    {bullet.length}/500
-                  </span>
-
-                  <button
-                    type="button"
-                    disabled={loading || bullet.trim().length < 10 || bullet.length > 500}
-                    onClick={() => handleRewrite()}
-                    className="px-3 py-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white font-medium text-xs flex items-center gap-1.5 transition-all disabled:cursor-not-allowed shadow-sm"
-                    title="Rewrite bullet (⌘ + Enter)"
-                  >
-                    {loading ? (
-                      <>
-                        <RotateCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Engineering...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Rewrite</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Privacy & Opt-in Text Retention Toggle (PRD FR-10) */}
-          <div className="flex items-center justify-between px-1 text-[11px] text-[#8b949e]">
-            <label className="flex items-center gap-2 cursor-pointer hover:text-[#e6edf3] transition-colors select-none">
-              <input
-                type="checkbox"
-                checked={optInLogging}
-                onChange={(e) => setOptInLogging(e.target.checked)}
-                suppressHydrationWarning
-                data-dashlane-ignore="true"
-                className="rounded bg-[#161b22] border-[#30363d] text-[#2ea043] focus:ring-0 focus:ring-offset-0 cursor-pointer"
-              />
-              <span>Allow anonymous bullet logging to improve AI prompt models</span>
-            </label>
-            <span className="text-[10px] font-mono text-[#7d8590] hidden sm:inline">
-              Privacy-by-Design: zero raw text stored by default (SHA-256)
+      {/* Slide-out Fullscreen Editorial Menu Drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-40 bg-[#0A0A0A] text-white flex flex-col justify-between p-8 md:p-16 animate-in fade-in duration-300">
+          <div className="flex items-center justify-between border-b border-white/10 pb-6">
+            <span className="font-mono text-xs uppercase tracking-widest text-neutral-400">
+              // STUDIO NAVIGATION
+            </span>
+            <span className="font-mono text-xs uppercase tracking-widest text-neutral-400">
+              BULLETPROOF V1.0 · TOGGLE WARS
             </span>
           </div>
 
-          {/* Quick Clickable Example Bullets */}
-          <div className="flex items-center gap-2 flex-wrap text-xs text-[#8b949e]">
-            <span className="text-[11px] text-[#8b949e]">Try example:</span>
-            {EXAMPLE_BULLETS.slice(0, 3).map((ex, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setBullet(ex)}
-                className="px-2.5 py-1 rounded-md bg-[#161b22] border border-[#30363d] hover:border-[#8b949e] text-[#8b949e] hover:text-[#e6edf3] text-xs transition-colors truncate max-w-xs"
-              >
-                &ldquo;{ex}&rdquo;
-              </button>
-            ))}
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 text-[#f85149] text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Post-Action Reveal Toast */}
-          {revealToast && (
-            <div className="p-3.5 rounded-xl bg-[#161b22] border-2 border-[#2ea043]/50 shadow-lg flex items-center justify-between gap-4 animate-in fade-in duration-200">
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-full bg-[#2ea043]/20 border border-[#2ea043] flex items-center justify-center text-[#2ea043] font-bold text-xs">
-                  ✓
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-[#e6edf3]">
-                    Variant Revealed:{' '}
-                    <span className="text-[#2ea043] font-bold">
-                      {revealToast.label}
-                    </span>
-                  </p>
-                  <p className="text-[11px] text-[#8b949e]">
-                    Your session is evaluating this style. Check its live Bayesian win rate in the Arena!
-                  </p>
-                </div>
-              </div>
-              <Link
-                href="/arena"
-                className="px-3 py-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] text-white font-medium text-xs shrink-0"
-              >
-                Inspect Arena →
-              </Link>
-            </div>
-          )}
-
-          {/* Suggestions List (Cleaned of AI Slop) */}
-          <div className="space-y-3.5 pt-1">
-            <div className="flex items-center justify-between text-xs text-[#8b949e]">
-              <h2 className="text-sm font-semibold text-[#e6edf3]">Recruiter-Ready Suggestions</h2>
-              <span>Click to copy any bullet</span>
-            </div>
-
-            <div className="space-y-3">
-              {suggestions.map((suggestion, idx) => {
-                const isCopied = copiedId === suggestion.id;
-                const currentRating = ratings[suggestion.id];
-                const wordCount = suggestion.text.split(/\s+/).filter(Boolean).length;
-
-                return (
-                  <div
-                    key={suggestion.id}
-                    className={`rounded-xl bg-[#161b22] border transition-all ${
-                      isCopied ? 'border-[#2ea043] shadow-sm' : 'border-[#30363d] hover:border-[#8b949e]/50'
-                    }`}
+          <nav className="my-auto space-y-4 md:space-y-6">
+            {[
+              { num: '01', label: 'THE WORKBENCH (APP)', href: '/' },
+              { num: '02', label: 'THE ARENA (A/B TESTING)', href: '/arena' },
+              { num: '03', label: 'RESUME PDF SCANNER', href: '/?tab=pdf' },
+              { num: '04', label: 'METHODOLOGY & GUARDRAILS', href: '/method' },
+              { num: '05', label: 'FLAGSMITH CLOUD CONSOLE', href: 'https://flagsmith.com', external: true },
+            ].map((item, idx) => (
+              <div key={idx} className="group overflow-hidden">
+                {item.external ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMenuOpen(false)}
+                    onMouseEnter={handleMouseEnterInteractive}
+                    onMouseLeave={handleMouseLeaveInteractive}
+                    className="flex items-baseline gap-4 md:gap-8 text-3xl md:text-6xl font-bold tracking-tighter hover:text-neutral-400 transition-colors duration-300"
                   >
-                    {/* Suggestion Card Body */}
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1.5 flex-1">
-                          <div className="flex items-center gap-2 text-xs font-mono text-[#8b949e]">
-                            <span className="w-5 h-5 rounded bg-[#0d1117] border border-[#30363d] flex items-center justify-center font-bold text-[#e6edf3] text-[11px]">
-                              {idx + 1}
-                            </span>
-                            <span>Suggestion {idx + 1}</span>
-                            <span>·</span>
-                            <span>{wordCount} words</span>
-                          </div>
+                    <span className="font-mono text-sm md:text-xl text-neutral-500 font-normal">
+                      {item.num}
+                    </span>
+                    <span>{item.label}</span>
+                    <ArrowUpRight className="w-6 h-6 md:w-10 md:h-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </a>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    onMouseEnter={handleMouseEnterInteractive}
+                    onMouseLeave={handleMouseLeaveInteractive}
+                    className="flex items-baseline gap-4 md:gap-8 text-3xl md:text-6xl font-bold tracking-tighter hover:text-neutral-400 transition-colors duration-300"
+                  >
+                    <span className="font-mono text-sm md:text-xl text-neutral-500 font-normal">
+                      {item.num}
+                    </span>
+                    <span>{item.label}</span>
+                    <ArrowUpRight className="w-6 h-6 md:w-10 md:h-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
 
-                          <div className="text-sm text-[#e6edf3] leading-relaxed pt-1">
-                            <HighlightedText text={suggestion.text} />
-                          </div>
-                        </div>
+          <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs font-mono text-neutral-400 gap-4">
+            <span>IIT JODHPUR · TOGGLE WARS 2026</span>
+            <span>POWERED BY FLAGSMITH NODE SDK & CLAUDE 3.5 SONNET</span>
+          </div>
+        </div>
+      )}
 
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(suggestion)}
-                          className={`shrink-0 px-3.5 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
-                            isCopied
-                              ? 'bg-[#238636] text-white shadow-sm'
-                              : 'bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] border border-[#30363d]'
-                          }`}
-                        >
-                          {isCopied ? (
-                            <>
-                              <Check className="w-3.5 h-3.5" />
-                              <span>Copied ✓</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5 text-[#8b949e]" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+      {/* 3. Hero Section (80vh minimum, center-aligned, 12vw staggered letter reveal) */}
+      <section className="min-h-[85vh] flex flex-col justify-center items-center text-center px-6 pt-32 pb-16 relative">
+        {/* Category Label */}
+        <div className="mb-6 overflow-hidden">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-[#525252] inline-block animate-studio-reveal">
+            // EDITORIAL EXPERIMENTATION STUDIO
+          </span>
+        </div>
 
-                      {/* Card Footer Bar: Metrics explanation & Feedback */}
-                      <div className="pt-2.5 border-t border-[#21262d] flex items-center justify-between text-xs text-[#8b949e]">
-                        <span className="text-[11px]">
-                          Replace <code className="text-[#58a6ff]">[X%]</code> with your genuine metrics.
-                        </span>
+        {/* 12vw Display Headline with Staggered Character Slide-Up */}
+        <h1 className="text-[12vw] font-bold tracking-[-0.05em] leading-[0.88] text-black uppercase flex flex-wrap justify-center overflow-hidden">
+          {heroLetters.map((char, index) => (
+            <span
+              key={index}
+              className="inline-block overflow-hidden"
+              style={{
+                display: 'inline-block',
+              }}
+            >
+              <span
+                className="inline-block animate-studio-reveal"
+                style={{
+                  animationDelay: `${index * 45}ms`,
+                }}
+              >
+                {char}
+              </span>
+            </span>
+          ))}
+        </h1>
 
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleRating(suggestion.id, 'up')}
-                            className={`p-1 rounded border transition-colors ${
-                              currentRating === 'up'
-                                ? 'bg-[#2ea043]/20 border-[#2ea043] text-[#2ea043]'
-                                : 'bg-[#0d1117] border-[#30363d] hover:border-[#8b949e] text-[#8b949e]'
-                            }`}
-                            title="Helpful rewrite"
-                          >
-                            <ThumbsUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRating(suggestion.id, 'down')}
-                            className={`p-1 rounded border transition-colors ${
-                              currentRating === 'down'
-                                ? 'bg-[#da3633]/20 border-[#da3633] text-[#da3633]'
-                                : 'bg-[#0d1117] border-[#30363d] hover:border-[#8b949e] text-[#8b949e]'
-                            }`}
-                            title="Needs revision"
-                          >
-                            <ThumbsDown className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
+        {/* Sub-headline: 24px, #525252, margin-top: 32px */}
+        <p className="text-lg md:text-2xl text-[#525252] mt-8 max-w-3xl font-normal tracking-[-0.02em] leading-[1.5] px-4">
+          The resume bullet rewriter that A/B tests itself. Powered by live
+          Flagsmith experimentation to empirically discover which AI rewrite
+          style wins real interviews.
+        </p>
+
+        {/* Hero Interactive CTAs */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center gap-4 z-10">
+          <Link
+            href="/workbench"
+            onMouseEnter={handleMouseEnterInteractive}
+            onMouseLeave={handleMouseLeaveInteractive}
+            className="px-8 py-4 rounded-full bg-[#000000] text-[#FFFFFF] font-medium text-sm tracking-tight hover:bg-neutral-800 transition-all duration-500 studio-ease flex items-center gap-2 group shadow-lg"
+          >
+            <span>Launch Live Workbench</span>
+            <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
+
+          <Link
+            href="/workbench?tab=pdf"
+            onMouseEnter={handleMouseEnterInteractive}
+            onMouseLeave={handleMouseLeaveInteractive}
+            className="px-8 py-4 rounded-full border border-black/10 text-black font-medium text-sm tracking-tight hover:border-black/40 hover:bg-black/5 transition-all duration-500 studio-ease flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4 text-[#525252]" />
+            <span>Upload PDF Resume</span>
+          </Link>
+
+          <Link
+            href="/arena"
+            onMouseEnter={handleMouseEnterInteractive}
+            onMouseLeave={handleMouseLeaveInteractive}
+            className="px-6 py-4 font-mono text-xs uppercase tracking-widest text-[#525252] hover:text-black transition-colors duration-300 flex items-center gap-1.5"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#2ea043] animate-pulse" />
+            <span>View Arena Leaderboard</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* 4. Infinite Project Marquee (30s linear scroll, pauses on hover, asymmetrical rounded corners) */}
+      <section className="w-full overflow-hidden border-y border-black/10 py-12 bg-neutral-50/50">
+        <div className="px-6 mb-6 flex items-center justify-between max-w-7xl mx-auto">
+          <span className="font-mono text-xs uppercase tracking-[0.1em] text-[#525252]">
+            // LIVE EXPERIMENT ARCHETYPES & METRICS
+          </span>
+          <span className="font-mono text-xs uppercase tracking-[0.1em] text-[#737373] hidden sm:inline">
+            HOVER TO PAUSE STREAM
+          </span>
+        </div>
+
+        <div className="relative w-full overflow-hidden">
+          {/* Infinite Marquee Track (Double array for seamless 360 loop) */}
+          <div className="animate-studio-marquee flex gap-6 px-4">
+            {[...marqueeCards, ...marqueeCards].map((card, idx) => {
+              // Asymmetrical corner styling per brief
+              let radiusClass = 'rounded-[40px]';
+              if (card.variant === 'A') {
+                radiusClass = 'rounded-tl-[100px] rounded-br-[20px] rounded-tr-[20px] rounded-bl-[20px]';
+              } else if (card.variant === 'B') {
+                radiusClass = 'rounded-tr-[100px] rounded-bl-[40px] rounded-tl-[20px] rounded-br-[20px]';
+              }
+
+              return (
+                <div
+                  key={idx}
+                  onMouseEnter={handleMouseEnterInteractive}
+                  onMouseLeave={handleMouseLeaveInteractive}
+                  className={`w-72 md:w-80 aspect-[5/7] shrink-0 bg-gradient-to-b ${card.bgGradient} ${card.textColor} p-8 flex flex-col justify-between border border-black/10 shadow-sm relative group overflow-hidden ${radiusClass} transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105`}
+                >
+                  {/* Grayscale hover transition */}
+                  <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                  {/* Top card metadata */}
+                  <div className="flex items-center justify-between z-10">
+                    <span className="font-mono text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full border border-current opacity-70">
+                      {card.tag}
+                    </span>
+                    <span className="font-mono text-xs opacity-60">
+                      #0{((idx % 6) + 1)}
+                    </span>
+                  </div>
+
+                  {/* Center Stat / Graphic */}
+                  <div className="my-auto z-10">
+                    <div className="text-4xl md:text-5xl font-bold tracking-tighter mb-2">
+                      {card.stat}
+                    </div>
+                    <div className="font-mono text-xs uppercase tracking-wider opacity-80">
+                      {card.subtitle}
                     </div>
                   </div>
-                );
-              })}
+
+                  {/* Bottom Card Title */}
+                  <div className="border-t border-current/20 pt-4 z-10 flex items-center justify-between">
+                    <div className="font-bold text-lg tracking-tight">
+                      {card.title}
+                    </div>
+                    <ArrowUpRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Centered Introductory Statement (Manifesto) */}
+      <section className="py-28 px-6 max-w-5xl mx-auto text-center">
+        <div className="font-mono text-xs uppercase tracking-[0.15em] text-[#737373] mb-8">
+          // THE EDITORIAL PHILOSOPHY
+        </div>
+
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-[-0.04em] leading-[1.1] text-black">
+          Most resumes lose interviews within six seconds because bullets recite
+          job descriptions instead of quantifiable business impact.
+        </h2>
+
+        <p className="mt-8 text-lg sm:text-xl text-[#525252] font-normal tracking-[-0.02em] leading-[1.6] max-w-3xl mx-auto">
+          BulletProof replaces human guesswork with live Flagsmith
+          experimentation. Every bullet you rewrite feeds a continuous
+          multivariate trial—measuring real human adoption decisions to
+          empirically discover what hiring managers actually choose.
+        </p>
+
+        {/* 4 Supporting Metrics Row */}
+        <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 pt-12 border-t border-black/10 text-left">
+          <div className="space-y-1">
+            <div className="font-mono text-3xl font-bold text-black tracking-tight">
+              1,248+
+            </div>
+            <div className="font-mono text-xs uppercase tracking-wider text-[#525252]">
+              Recorded Evaluations
             </div>
           </div>
-          </>
-        )}
-      </div>
-
-        {/* Right Rail */}
-        <div className="order-3 w-full lg:w-80">
-          <RightRail />
+          <div className="space-y-1">
+            <div className="font-mono text-3xl font-bold text-[#238636] tracking-tight">
+              +22.4%
+            </div>
+            <div className="font-mono text-xs uppercase tracking-wider text-[#525252]">
+              Observed Lift
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="font-mono text-3xl font-bold text-black tracking-tight">
+              &lt; 3.2s
+            </div>
+            <div className="font-mono text-xs uppercase tracking-wider text-[#525252]">
+              p95 Inference
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="font-mono text-3xl font-bold text-black tracking-tight">
+              0%
+            </div>
+            <div className="font-mono text-xs uppercase tracking-wider text-[#525252]">
+              Raw Storage (Privacy)
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Flagsmith Modal */}
-      {showFlagsmithModal && (
-        <FlagsmithControlPanel onClose={() => { setShowFlagsmithModal(false); refreshFlags(); }} />
-      )}
+      {/* 6. Project Grid (Two-column on desktop, single-column on mobile) */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row items-baseline justify-between mb-12 border-b border-black/10 pb-6 gap-4">
+          <div>
+            <span className="font-mono text-xs uppercase tracking-[0.1em] text-[#525252] block mb-2">
+              // STUDIO CASE STUDIES & ARCHITECTURE
+            </span>
+            <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-black">
+              System Modules
+            </h3>
+          </div>
+          <span className="font-mono text-xs text-[#737373]">
+            [ 04 MODULES ACTIVE ]
+          </span>
+        </div>
+
+        {/* 2-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14">
+          {projects.map((project) => (
+            <Link
+              key={project.id}
+              href={project.href}
+              onMouseEnter={handleMouseEnterInteractive}
+              onMouseLeave={handleMouseLeaveInteractive}
+              className="group block"
+            >
+              {/* 4:3 Aspect Ratio Container with Slight Rounding */}
+              <div className="aspect-[4/3] rounded-lg overflow-hidden relative bg-neutral-100 border border-black/10 flex flex-col justify-between p-8 md:p-10 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:border-black/30 shadow-sm">
+                {/* Visual Background Pattern / Grayscale to Color */}
+                <div className="absolute inset-0 bg-gradient-to-br from-neutral-200 via-neutral-100 to-neutral-300 grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+
+                {/* Subtle Grid Wireframe on Visual Container */}
+                <div
+                  className="absolute inset-0 opacity-15 pointer-events-none"
+                  style={{
+                    backgroundImage:
+                      'radial-gradient(circle, #000 1px, transparent 1px)',
+                    backgroundSize: '24px 24px',
+                  }}
+                />
+
+                {/* Hover-triggered overlay (black at 10% opacity) */}
+                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                {/* Top Row: Index Tag & Hover Arrow */}
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="font-mono text-xs uppercase tracking-widest px-3 py-1 bg-white/80 backdrop-blur rounded border border-black/10 text-black">
+                    {project.tag}
+                  </span>
+
+                  {/* Top-right 'arrow-up-right' icon appearing on hover */}
+                  <div className="w-10 h-10 rounded-full bg-white text-black border border-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0 shadow-md">
+                    <ArrowUpRight className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Center Visual Statement */}
+                <div className="relative z-10 my-auto">
+                  <div className="font-mono text-4xl md:text-6xl font-bold tracking-tighter text-black/15 group-hover:text-black/30 transition-colors duration-500">
+                    {project.id}
+                  </div>
+                  <p className="text-sm md:text-base text-[#525252] mt-2 max-w-sm line-clamp-3">
+                    {project.description}
+                  </p>
+                </div>
+
+                {/* Bottom interactive hint */}
+                <div className="relative z-10 font-mono text-[11px] uppercase tracking-wider text-black flex items-center gap-1 group-hover:underline">
+                  <span>Enter Module</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+
+              {/* Bottom Metadata Row separated by 1px border-top */}
+              <div className="border-t border-black/10 pt-4 mt-4 flex items-baseline justify-between">
+                <div>
+                  <h4 className="text-2xl font-bold tracking-tight text-black group-hover:text-neutral-700 transition-colors">
+                    {project.title}
+                  </h4>
+                  <div className="font-mono text-xs uppercase tracking-[0.1em] text-[#525252] mt-1">
+                    {project.category}
+                  </div>
+                </div>
+                <div className="font-mono text-xs text-[#737373]">
+                  {project.year}
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 7. High-Contrast Dark Footer (Background: #0A0A0A, Text: #FFFFFF) */}
+      <footer className="bg-[#0A0A0A] text-[#FFFFFF] pt-24 pb-12 mt-20 border-t border-black/20">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Four-Column Grid on Desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pb-16">
+            {/* Columns 1-2: Large Brand Name and Short Bio */}
+            <div className="md:col-span-2 space-y-6">
+              <div className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-[-0.05em] text-white">
+                BULLETPROOF
+              </div>
+              <p className="text-[#A3A3A3] text-base md:text-lg max-w-lg leading-relaxed font-normal">
+                The engineering-grade resume bullet rewriter built on continuous
+                Flagsmith experimentation. Empirically discovering which AI
+                rewrite archetype wins real jobs.
+              </p>
+              <div className="pt-2">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900 border border-white/10 font-mono text-xs text-neutral-300">
+                  <span className="w-2 h-2 rounded-full bg-[#2ea043] animate-pulse" />
+                  <span>Toggle Wars 2026 · Team Pirates</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Column 3: 'Socials' & Navigation List */}
+            <div className="space-y-4">
+              <div className="font-mono text-xs uppercase tracking-[0.1em] text-neutral-400">
+                // SYSTEM NAV
+              </div>
+              <ul className="space-y-2.5 text-sm text-neutral-300">
+                <li>
+                  <Link
+                    href="/workbench"
+                    onMouseEnter={handleMouseEnterInteractive}
+                    onMouseLeave={handleMouseLeaveInteractive}
+                    className="hover:text-white transition-colors flex items-center justify-between group"
+                  >
+                    <span>The Workbench</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/arena"
+                    onMouseEnter={handleMouseEnterInteractive}
+                    onMouseLeave={handleMouseLeaveInteractive}
+                    className="hover:text-white transition-colors flex items-center justify-between group"
+                  >
+                    <span>The Arena Leaderboard</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/workbench?tab=pdf"
+                    onMouseEnter={handleMouseEnterInteractive}
+                    onMouseLeave={handleMouseLeaveInteractive}
+                    className="hover:text-white transition-colors flex items-center justify-between group"
+                  >
+                    <span>PDF Resume Scanner</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/method"
+                    onMouseEnter={handleMouseEnterInteractive}
+                    onMouseLeave={handleMouseLeaveInteractive}
+                    className="hover:text-white transition-colors flex items-center justify-between group"
+                  >
+                    <span>Statistical Method</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: 'Contact' & Technical Specifications */}
+            <div className="space-y-4">
+              <div className="font-mono text-xs uppercase tracking-[0.1em] text-neutral-400">
+                // SPECIFICATIONS
+              </div>
+              <ul className="space-y-2.5 text-xs font-mono text-neutral-400">
+                <li className="flex justify-between border-b border-white/5 pb-1.5">
+                  <span>FRAMEWORK</span>
+                  <span className="text-neutral-200">Next.js 15 App Router</span>
+                </li>
+                <li className="flex justify-between border-b border-white/5 pb-1.5">
+                  <span>TOGGLES</span>
+                  <span className="text-[#2ea043]">Flagsmith Edge SDK</span>
+                </li>
+                <li className="flex justify-between border-b border-white/5 pb-1.5">
+                  <span>AI ENGINE</span>
+                  <span className="text-neutral-200">Claude 3.5 Sonnet</span>
+                </li>
+                <li className="flex justify-between border-b border-white/5 pb-1.5">
+                  <span>PDF PARSER</span>
+                  <span className="text-neutral-200">unpdf 2.2.1</span>
+                </li>
+                <li className="flex justify-between border-b border-white/5 pb-1.5">
+                  <span>LOCATION</span>
+                  <span className="text-neutral-200">IIT Jodhpur, India</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar: Thin Border-Top (white at 10% opacity) with Credits in 14px Text */}
+          <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between text-sm text-neutral-400 gap-4">
+            <div>
+              © 2026 BulletProof Studio. All rights reserved.
+            </div>
+            <div className="flex items-center gap-6">
+              <a
+                href="https://flagsmith.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={handleMouseEnterInteractive}
+                onMouseLeave={handleMouseLeaveInteractive}
+                className="hover:text-[#2ea043] transition-colors"
+              >
+                Powered by Flagsmith
+              </a>
+              <Link
+                href="/workbench"
+                onMouseEnter={handleMouseEnterInteractive}
+                onMouseLeave={handleMouseLeaveInteractive}
+                className="text-white hover:underline"
+              >
+                Launch App →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
