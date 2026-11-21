@@ -54,6 +54,7 @@ const DEFAULT_SUGGESTIONS: Suggestion[] = [
 ];
 
 export default function WorkbenchPage() {
+  const [mounted, setMounted] = useState(false);
   const [bullet, setBullet] = useState('');
   const [role, setRole] = useState('Autopilot (Default)');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function WorkbenchPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     refreshFlags();
   }, []);
 
@@ -193,6 +195,22 @@ export default function WorkbenchPage() {
       }),
     }).catch(() => {});
   };
+
+  if (!mounted) {
+    return (
+      <div className="max-w-[1440px] mx-auto px-4 py-6" suppressHydrationWarning>
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="order-2 lg:order-1 w-full lg:w-72 h-80 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
+          <div className="order-1 lg:order-2 flex-1 w-full max-w-3xl space-y-5">
+            <div className="h-6 w-36 bg-[#161b22] rounded-md animate-pulse" />
+            <div className="h-44 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
+            <div className="h-60 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
+          </div>
+          <div className="order-3 w-full lg:w-80 h-72 bg-[#161b22] border border-[#30363d] rounded-xl animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 py-6" suppressHydrationWarning>

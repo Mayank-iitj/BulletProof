@@ -28,6 +28,8 @@ export function Sidebar({ onNewBulletClick, onOpenFlagsmith }: SidebarProps) {
           <button
             type="button"
             onClick={onNewBulletClick}
+            suppressHydrationWarning
+            data-dashlane-ignore="true"
             className="px-2.5 py-1 rounded-md bg-[#238636] hover:bg-[#2ea043] text-white font-medium text-xs flex items-center gap-1 shadow-sm transition-colors"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -133,6 +135,8 @@ export function Sidebar({ onNewBulletClick, onOpenFlagsmith }: SidebarProps) {
         <button
           type="button"
           onClick={onOpenFlagsmith}
+          suppressHydrationWarning
+          data-dashlane-ignore="true"
           className="text-xs text-[#8b949e] hover:text-[#2f81f7] pt-1 block"
         >
           Manage Flagsmith flags →

@@ -143,6 +143,8 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setShowFlagsmithPanel(true)}
+              suppressHydrationWarning
+              data-dashlane-ignore="true"
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#161b22] border border-[#30363d] hover:border-[#2ea043] text-xs font-medium transition-colors cursor-pointer group"
               title="Click to open live Flagsmith Management Console"
             >
