@@ -14,10 +14,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning data-dashlane-ignore="true">
       <body
         className="bg-[#0d1117] text-[#e6edf3] antialiased selection:bg-[#2f81f7]/30 selection:text-white flex flex-col min-h-screen"
         suppressHydrationWarning
+        data-dashlane-ignore="true"
       >
         <Navbar />
         <main className="flex-1">{children}</main>

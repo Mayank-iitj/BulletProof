@@ -264,6 +264,9 @@ export default function WorkbenchPage() {
                 ref={inputRef}
                 rows={3}
                 value={bullet}
+                suppressHydrationWarning
+                data-dashlane-ignore="true"
+                autoComplete="off"
                 onChange={(e) => {
                   setBullet(e.target.value);
                   if (error) setError(null);
@@ -345,6 +348,8 @@ export default function WorkbenchPage() {
                 type="checkbox"
                 checked={optInLogging}
                 onChange={(e) => setOptInLogging(e.target.checked)}
+                suppressHydrationWarning
+                data-dashlane-ignore="true"
                 className="rounded bg-[#161b22] border-[#30363d] text-[#2ea043] focus:ring-0 focus:ring-offset-0 cursor-pointer"
               />
               <span>Allow anonymous bullet logging to improve AI prompt models</span>

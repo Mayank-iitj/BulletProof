@@ -40,6 +40,9 @@ export function Sidebar({ onNewBulletClick, onOpenFlagsmith }: SidebarProps) {
           <input
             type="text"
             placeholder="Find an experiment..."
+            suppressHydrationWarning
+            data-dashlane-ignore="true"
+            autoComplete="off"
             className="w-full px-3 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] text-xs text-[#e6edf3] placeholder:text-[#8b949e] focus:outline-none focus:border-[#2f81f7]"
           />
         </div>

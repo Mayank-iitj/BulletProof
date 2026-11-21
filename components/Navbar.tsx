@@ -126,6 +126,9 @@ export function Navbar() {
                 ref={searchInputRef}
                 type="text"
                 placeholder="Type / to search"
+                suppressHydrationWarning
+                data-dashlane-ignore="true"
+                autoComplete="off"
                 className="w-full pl-8 pr-12 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] text-xs text-[#e6edf3] placeholder:text-[#8b949e] focus:outline-none focus:border-[#2f81f7] focus:ring-1 focus:ring-[#2f81f7] transition-all"
               />
               <span className="absolute right-2.5 px-1.5 py-0.5 rounded border border-[#30363d] bg-[#21262d] text-[10px] font-mono text-[#8b949e]">
