@@ -65,8 +65,28 @@ export default function WorkbenchPage() {
   const [ratings, setRatings] = useState<Record<string, 'up' | 'down'>>({});
   const [error, setError] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [activeVariant, setActiveVariant] = useState<VariantKey>('impact');
+  const [showWinnerBanner, setShowWinnerBanner] = useState(false);
   const [showFlagsmithModal, setShowFlagsmithModal] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const refreshFlags = async () => {
+    try {
+      const res = await fetch('/api/flagsmith/status');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.evaluatedFlags) {
+          setActiveVariant(data.evaluatedFlags.rewrite_style);
+          setIsPaused(Boolean(data.evaluatedFlags.llm_kill_switch));
+          setShowWinnerBanner(Boolean(data.evaluatedFlags.show_winner_banner));
+        }
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    refreshFlags();
+  }, []);
 
   // Handle keyboard shortcut (Cmd/Ctrl + Enter)
   useEffect(() => {
@@ -196,15 +216,35 @@ export default function WorkbenchPage() {
               <span className="px-2 py-0.5 rounded-full border border-[#2ea043]/30 bg-[#2ea043]/10 text-[#2ea043] text-[11px] font-medium">
                 Live
               </span>
+              <span className="px-2 py-0.5 rounded-full border border-[#30363d] bg-[#161b22] text-[#8b949e] font-mono text-[10px] hidden sm:inline-block">
+                Flagsmith: <strong className="text-[#58a6ff]">{activeVariant}</strong>
+              </span>
             </div>
             <button
               onClick={() => setShowFlagsmithModal(true)}
               className="text-xs text-[#8b949e] hover:text-[#2f81f7] flex items-center gap-1 font-mono transition-colors"
             >
-              <span>Flagsmith A/B/C Console</span>
+              <span>Flagsmith Console</span>
               <Sliders className="w-3.5 h-3.5 text-[#2ea043]" />
             </button>
           </div>
+
+          {/* Winner Banner if flag enabled in Flagsmith */}
+          {showWinnerBanner && (
+            <div className="p-3.5 rounded-xl border border-[#d29922]/40 bg-[#d29922]/10 flex items-center justify-between text-xs text-[#e6edf3]">
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-4 h-4 text-[#d29922] shrink-0" />
+                <div>
+                  <span className="font-semibold text-[#e6edf3]">Flagsmith Experiment Complete: </span>
+                  <span className="text-[#d29922]">Team Impact won with statistically significant 68.2% copy rate</span>
+                  <span className="text-[#8b949e]"> — now permanently rolled out to 100% of users.</span>
+                </div>
+              </div>
+              <Link href="/arena" className="text-[11px] font-mono text-[#58a6ff] hover:underline shrink-0 hidden sm:inline-block">
+                View Arena Stats →
+              </Link>
+            </div>
+          )}
 
           {/* Paused alert if kill switch active */}
           {isPaused && (
@@ -458,7 +498,7 @@ export default function WorkbenchPage() {
 
       {/* Flagsmith Modal */}
       {showFlagsmithModal && (
-        <FlagsmithControlPanel onClose={() => setShowFlagsmithModal(false)} />
+        <FlagsmithControlPanel onClose={() => { setShowFlagsmithModal(false); refreshFlags(); }} />
       )}
     </div>
   );

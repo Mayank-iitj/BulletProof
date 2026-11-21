@@ -10,8 +10,17 @@ interface CachedFlags {
   };
 }
 
-const CACHE_TTL_MS = 60 * 1000;
+// 3 second TTL for real-time responsiveness when toggling in Flagsmith Cloud
+const CACHE_TTL_MS = 3 * 1000;
 const memoryCache = new Map<string, CachedFlags>();
+
+export function clearFlagCache(sessionId?: string) {
+  if (sessionId) {
+    memoryCache.delete(sessionId);
+  } else {
+    memoryCache.clear();
+  }
+}
 
 export const liveOverrides = new Map<string, {
   variant?: VariantKey;
@@ -72,10 +81,10 @@ export async function evaluateFlags(
     return { ...cached.flags, fromCacheOrFallback: true };
   }
 
-  const serverKey = process.env.FLAGSMITH_SERVER_KEY;
+  const envKey = process.env.FLAGSMITH_SERVER_KEY || process.env.FLAGSMITH_ENVIRONMENT_KEY || process.env.NEXT_PUBLIC_FLAGSMITH_KEY;
   const apiUrl = process.env.FLAGSMITH_API_URL || 'https://edge.api.flagsmith.com/api/v1/';
 
-  if (!serverKey) {
+  if (!envKey) {
     // Graceful offline/local mode: sticky deterministic assignment per session
     const assignedVariant = deterministicVariantHash(sessionId);
     const flags = {
@@ -99,7 +108,7 @@ export async function evaluateFlags(
     // Dynamic import to avoid SSR bundling issues
     const { Flagsmith } = await import('flagsmith-nodejs');
     const flagsmith = new Flagsmith({
-      environmentKey: serverKey,
+      environmentKey: envKey,
       apiUrl,
     });
 

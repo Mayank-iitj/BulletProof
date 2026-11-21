@@ -27,11 +27,11 @@ export async function track(e: TrackPayload): Promise<void> {
       props: e.props || {},
     });
 
-    // 2. Best-effort forward to Flagsmith Experimentation
-    const serverKey = process.env.FLAGSMITH_SERVER_KEY;
+    // 2. Best-effort forward to Flagsmith Experimentation & Identity Traits
+    const envKey = process.env.FLAGSMITH_SERVER_KEY || process.env.FLAGSMITH_ENVIRONMENT_KEY || process.env.NEXT_PUBLIC_FLAGSMITH_KEY;
     const apiUrl = process.env.FLAGSMITH_API_URL || 'https://edge.api.flagsmith.com/api/v1/';
 
-    if (serverKey) {
+    if (envKey) {
       // Flagsmith Analytics / Experimentation event ingestion
       // Runs in background without blocking API response
       Promise.resolve().then(async () => {
@@ -40,7 +40,7 @@ export async function track(e: TrackPayload): Promise<void> {
           await fetch(endpoint, {
             method: 'POST',
             headers: {
-              'X-Environment-Key': serverKey,
+              'X-Environment-Key': envKey,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -51,12 +51,20 @@ export async function track(e: TrackPayload): Promise<void> {
                   trait_value: 1,
                 },
                 {
+                  trait_key: 'last_event_type',
+                  trait_value: e.type,
+                },
+                {
+                  trait_key: 'last_variant',
+                  trait_value: e.variant,
+                },
+                {
                   trait_key: 'last_event_time',
                   trait_value: new Date().toISOString(),
                 },
               ],
             }),
-            signal: AbortSignal.timeout(2000),
+            signal: AbortSignal.timeout(3000),
           }).catch((err) => {
             console.debug('[Tracker] Flagsmith edge trait update silent error:', err.message);
           });
