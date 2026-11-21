@@ -7,6 +7,7 @@ import { Suggestion, VARIANT_METADATA, VariantKey } from '@/lib/types';
 import { Sidebar } from '@/components/Sidebar';
 import { RightRail } from '@/components/RightRail';
 import { FlagsmithControlPanel } from '@/components/FlagsmithControlPanel';
+import { ResumeUploader } from '@/components/ResumeUploader';
 import {
   Send,
   Check,
@@ -20,6 +21,7 @@ import {
   HelpCircle,
   Sparkles,
   ChevronDown,
+  FileText,
 } from 'lucide-react';
 
 const EXAMPLE_BULLETS = [
@@ -55,6 +57,7 @@ const DEFAULT_SUGGESTIONS: Suggestion[] = [
 
 export default function WorkbenchPage() {
   const [mounted, setMounted] = useState(false);
+  const [workbenchMode, setWorkbenchMode] = useState<'editor' | 'pdf'>('editor');
   const [bullet, setBullet] = useState('');
   const [role, setRole] = useState('Autopilot (Default)');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
@@ -275,8 +278,60 @@ export default function WorkbenchPage() {
             </div>
           )}
 
-          {/* GitHub Copilot Style Input Box */}
-          <div className="rounded-xl border border-[#30363d] bg-[#0d1117] focus-within:border-[#2f81f7] focus-within:ring-1 focus-within:ring-[#2f81f7] transition-all shadow-sm">
+          {/* Mode Switcher: Single Bullet Rewriter vs Full PDF Scanner */}
+          <div className="flex items-center gap-1.5 border-b border-[#30363d] pb-2 text-xs">
+            <button
+              type="button"
+              onClick={() => setWorkbenchMode('editor')}
+              suppressHydrationWarning
+              data-dashlane-ignore="true"
+              className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+                workbenchMode === 'editor'
+                  ? 'bg-[#21262d] text-[#e6edf3] font-semibold border border-[#30363d]'
+                  : 'text-[#8b949e] hover:text-[#e6edf3]'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#58a6ff]" />
+              <span>Bullet Rewriter</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setWorkbenchMode('pdf')}
+              suppressHydrationWarning
+              data-dashlane-ignore="true"
+              className={`px-3 py-1.5 rounded-md font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
+                workbenchMode === 'pdf'
+                  ? 'bg-[#21262d] text-[#e6edf3] font-semibold border border-[#30363d]'
+                  : 'text-[#8b949e] hover:text-[#e6edf3]'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5 text-[#2ea043]" />
+              <span>Upload PDF Resume</span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#2ea043]/10 text-[#2ea043] border border-[#2ea043]/30">
+                Live
+              </span>
+            </button>
+          </div>
+
+          {/* Conditional View: PDF Scanner or Copilot Input Box */}
+          {workbenchMode === 'pdf' ? (
+            <ResumeUploader
+              onSelectBullet={(selectedBullet, suggestedRole) => {
+                setBullet(selectedBullet);
+                if (suggestedRole && ROLES.includes(suggestedRole)) {
+                  setRole(suggestedRole);
+                }
+                setWorkbenchMode('editor');
+                setTimeout(() => {
+                  inputRef.current?.focus();
+                  handleRewrite();
+                }, 150);
+              }}
+            />
+          ) : (
+            <>
+              {/* GitHub Copilot Style Input Box */}
+              <div className="rounded-xl border border-[#30363d] bg-[#0d1117] focus-within:border-[#2f81f7] focus-within:ring-1 focus-within:ring-[#2f81f7] transition-all shadow-sm">
             <div className="p-4">
               <textarea
                 ref={inputRef}
@@ -528,7 +583,9 @@ export default function WorkbenchPage() {
               })}
             </div>
           </div>
-        </div>
+          </>
+        )}
+      </div>
 
         {/* Right Rail */}
         <div className="order-3 w-full lg:w-80">
