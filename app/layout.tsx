@@ -6,6 +6,15 @@ export const metadata: Metadata = {
   title: 'BulletProof — The Resume Bullet Rewriter that A/B Tests Itself',
   description:
     'Paste a weak resume bullet, get three sharper versions. Powered by Flagsmith experimentation to empirically discover which AI rewrite style wins real jobs.',
+  icons: {
+    icon: [
+      { url: '/bulletproof-icon.png', sizes: '90x90', type: 'image/png' },
+      { url: '/favicon.ico', type: 'image/png' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/bulletproof-icon.png',
+    apple: '/bulletproof-icon.png',
+  },
 };
 
 export default function RootLayout({

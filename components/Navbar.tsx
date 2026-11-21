@@ -60,45 +60,14 @@ export function Navbar() {
 
             {/* BulletProof Brand Mark */}
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-full bg-[#161b22] border border-[#30363d] group-hover:border-[#58a6ff] flex items-center justify-center transition-all shadow-sm group-hover:shadow-[0_0_12px_rgba(88,166,255,0.25)]">
-                <svg
-                  height="22"
-                  viewBox="0 0 32 32"
-                  width="22"
-                  className="transition-transform group-hover:scale-105"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Shield Contour */}
-                  <path
-                    d="M16 4L6 8.5V16C6 22.8 10.3 27.2 16 28.8C21.7 27.2 26 22.8 26 16V8.5L16 4Z"
-                    fill="#0d1117"
-                    stroke="#58a6ff"
-                    strokeWidth="1.75"
-                    strokeLinejoin="round"
-                  />
-                  {/* High-Velocity Bullet Projectile */}
-                  <path
-                    d="M16 8C14.2 11 13.5 14 13.5 17.5V22H18.5V17.5C18.5 14 17.8 11 16 8Z"
-                    fill="url(#bulletGradient)"
-                  />
-                  {/* Bullet Rim / Base */}
-                  <rect x="13" y="21" width="6" height="2" rx="0.5" fill="#30363d" />
-                  {/* Verified Checkmark / Armor Spark */}
-                  <path
-                    d="M14.5 16.5L15.7 17.7L18 14.5"
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <defs>
-                    <linearGradient id="bulletGradient" x1="16" y1="8" x2="16" y2="22" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#2ea043" />
-                      <stop offset="1" stopColor="#238636" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+              <div className="w-8 h-8 rounded-full bg-white border border-[#30363d] group-hover:border-[#58a6ff] flex items-center justify-center p-1 transition-all shadow-sm group-hover:shadow-[0_0_12px_rgba(88,166,255,0.35)] overflow-hidden">
+                <img
+                  src="/bulletproof-icon.png"
+                  alt="BulletProof"
+                  className="w-full h-full object-contain transition-transform group-hover:scale-105"
+                  suppressHydrationWarning
+                  data-dashlane-ignore="true"
+                />
               </div>
               <span className="font-semibold text-sm tracking-tight text-[#e6edf3] group-hover:text-white transition-colors">
                 Dashboard
