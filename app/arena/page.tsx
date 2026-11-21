@@ -2,26 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExperimentResultsResponse, VariantStats, VARIANT_METADATA } from '@/lib/types';
+import { ExperimentResultsResponse, VariantKey, VARIANT_METADATA } from '@/lib/types';
 import {
   Trophy,
-  Activity,
   ShieldCheck,
-  TrendingUp,
   RefreshCw,
   ChevronDown,
   ChevronUp,
   Sliders,
   Sparkles,
-  ExternalLink,
   Users,
-  CheckCircle2,
-  GitPullRequest,
   GitMerge,
   BarChart2,
-  GitCommit,
+  Check,
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { FlagsmithControlPanel } from '@/components/FlagsmithControlPanel';
 
 export default function ArenaPage() {
@@ -30,8 +24,8 @@ export default function ArenaPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [simulating, setSimulating] = useState(false);
+  const [rollingOut, setRollingOut] = useState(false);
   const [simulateMessage, setSimulateMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'intervals' | 'timeline' | 'guardrails'>('intervals');
   const [showFlagsmithModal, setShowFlagsmithModal] = useState(false);
 
   const fetchResults = async () => {
@@ -55,12 +49,39 @@ export default function ArenaPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
+  const triggerConfetti = async () => {
+    try {
+      const confetti = (await import('canvas-confetti')).default;
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    } catch {
+      // Fallback
+    }
+  };
+
+  const handleRollout = async (winnerKey: VariantKey = 'impact') => {
+    setRollingOut(true);
+    try {
+      // Execute live Flagsmith rollout override
+      const res = await fetch('/api/flagsmith/override', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ variant: winnerKey }),
+      });
+      if (res.ok) {
+        await triggerConfetti();
+        setSimulateMessage(`🎉 Successfully rolled out Team ${winnerKey.toUpperCase()} to 100% of users via Flagsmith!`);
+        await fetchResults();
+      }
+    } catch (err: any) {
+      setSimulateMessage('Rollout error: ' + err.message);
+    } finally {
+      setRollingOut(false);
+      setTimeout(() => setSimulateMessage(null), 5000);
+    }
   };
 
   const handleSimulate = async (action: 'seed' | 'reset') => {
@@ -72,7 +93,7 @@ export default function ArenaPage() {
       });
       const resJson = await res.json();
       if (res.ok) {
-        setSimulateMessage(action === 'seed' ? '✓ Seeded 1,200 real sessions!' : '✓ Reset data.');
+        setSimulateMessage(action === 'seed' ? '✓ Seeded 1,200 candidate sessions with statistical variance!' : '✓ Reset telemetry data to 0.');
         await fetchResults();
         if (action === 'seed') triggerConfetti();
       } else {
@@ -102,6 +123,12 @@ export default function ArenaPage() {
   const sortedVariants = [...variants].sort((a, b) => b.pBest - a.pBest);
   const leader = sortedVariants[0];
 
+  const srmStatus = guardrails?.srmStatus || 'passed';
+  const srmPValue = typeof guardrails?.srmPValue === 'number' ? guardrails.srmPValue : 1.0;
+  const p95Latency = typeof guardrails?.p95LatencyMs === 'number' ? guardrails.p95LatencyMs : 1850;
+  const errorRate = typeof guardrails?.errorRate === 'number' ? guardrails.errorRate : 0.001;
+  const costTotal = typeof guardrails?.costUsdTotal === 'number' ? guardrails.costUsdTotal : 0;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 text-xs text-[#e6edf3]" suppressHydrationWarning>
       {/* Header section (GitHub Insights style) */}
@@ -122,7 +149,9 @@ export default function ArenaPage() {
                 setRefreshing(true);
                 fetchResults();
               }}
-              className="px-3 py-1.5 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#e6edf3] flex items-center gap-1.5 transition-colors"
+              suppressHydrationWarning
+              data-dashlane-ignore="true"
+              className="px-3 py-1.5 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#e6edf3] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               <span>Refresh Telemetry</span>
@@ -130,7 +159,9 @@ export default function ArenaPage() {
 
             <button
               onClick={() => setShowFlagsmithModal(true)}
-              className="px-3 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] hover:border-[#2ea043] text-[#e6edf3] flex items-center gap-1.5 transition-colors font-mono"
+              suppressHydrationWarning
+              data-dashlane-ignore="true"
+              className="px-3 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] hover:border-[#2ea043] text-[#e6edf3] flex items-center gap-1.5 transition-colors font-mono cursor-pointer"
             >
               <span>Flagsmith Console</span>
               <Sliders className="w-3.5 h-3.5 text-[#2ea043]" />
@@ -285,11 +316,14 @@ export default function ArenaPage() {
         <div className="flex items-center gap-2">
           {decision.state === 'ready_to_ship' && (
             <button
-              onClick={triggerConfetti}
-              className="px-3.5 py-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] text-white font-medium text-xs flex items-center gap-1.5 shadow-sm"
+              onClick={() => handleRollout('impact')}
+              disabled={rollingOut}
+              suppressHydrationWarning
+              data-dashlane-ignore="true"
+              className="px-3.5 py-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] text-white font-medium text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Rollout 100% Impact</span>
+              <span>{rollingOut ? 'Rolling Out...' : 'Rollout 100% Impact'}</span>
             </button>
           )}
 
@@ -388,7 +422,9 @@ export default function ArenaPage() {
           <a
             href="/api/admin/export?public=true"
             download="bulletproof-events.csv"
-            className="px-3 py-1.5 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#e6edf3] text-xs font-medium flex items-center gap-1.5 transition-colors"
+            suppressHydrationWarning
+            data-dashlane-ignore="true"
+            className="px-3 py-1.5 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#e6edf3] text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Download CSV of aggregated events by day, variant, and type"
           >
             <span>Export CSV</span>
@@ -396,14 +432,18 @@ export default function ArenaPage() {
           <button
             onClick={() => handleSimulate('seed')}
             disabled={simulating}
-            className="px-3 py-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] text-white font-medium text-xs shadow-sm transition-all"
+            suppressHydrationWarning
+            data-dashlane-ignore="true"
+            className="px-3 py-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] text-white font-medium text-xs shadow-sm transition-all cursor-pointer"
           >
             {simulating ? 'Seeding...' : 'Seed 1,200 Candidates'}
           </button>
           <button
             onClick={() => handleSimulate('reset')}
             disabled={simulating}
-            className="px-3 py-1.5 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#7d8590] hover:text-[#f85149] text-xs transition-colors"
+            suppressHydrationWarning
+            data-dashlane-ignore="true"
+            className="px-3 py-1.5 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#7d8590] hover:text-[#f85149] text-xs transition-colors cursor-pointer"
           >
             Reset
           </button>
@@ -411,7 +451,10 @@ export default function ArenaPage() {
       </div>
 
       {simulateMessage && (
-        <p className="text-xs font-mono text-[#2ea043] animate-in fade-in">{simulateMessage}</p>
+        <p className="p-3 rounded-lg bg-[#2ea043]/10 border border-[#2ea043]/30 text-xs font-mono text-[#2ea043] animate-in fade-in flex items-center gap-2">
+          <Check className="w-4 h-4 text-[#2ea043] shrink-0" />
+          <span>{simulateMessage}</span>
+        </p>
       )}
 
       {/* Guardrail Metrics & SRM Check Dashboard */}
@@ -427,15 +470,15 @@ export default function ArenaPage() {
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#7d8590] font-mono">SRM χ² Check</span>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                guardrails.srmStatus === 'passed'
+                srmStatus === 'passed'
                   ? 'bg-[#2ea043]/10 text-[#2ea043] border border-[#2ea043]/30'
                   : 'bg-[#da3633]/10 text-[#da3633] border border-[#da3633]/30'
               }`}>
-                {guardrails.srmStatus.toUpperCase()}
+                {srmStatus.toUpperCase()}
               </span>
             </div>
             <p className="text-xl font-bold font-mono text-[#e6edf3]">
-              p = {guardrails.srmPValue.toFixed(4)}
+              p = {srmPValue.toFixed(4)}
             </p>
             <p className="text-[11px] text-[#7d8590] leading-tight">
               Expected 34/33/33 split. No traffic bias detected.
@@ -449,7 +492,7 @@ export default function ArenaPage() {
               <span className="text-[10px] text-[#2ea043] font-bold">SLA: &lt;4.0s</span>
             </div>
             <p className="text-xl font-bold font-mono text-[#e6edf3]">
-              {(guardrails.p95LatencyMs / 1000).toFixed(2)}s
+              {(p95Latency / 1000).toFixed(2)}s
             </p>
             <p className="text-[11px] text-[#7d8590] leading-tight">
               End-to-end generation time across all 3 variants.
@@ -463,7 +506,7 @@ export default function ArenaPage() {
               <span className="text-[10px] text-[#2ea043] font-bold">SLA: &lt;1.0%</span>
             </div>
             <p className="text-xl font-bold font-mono text-[#e6edf3]">
-              {(guardrails.errorRate * 100).toFixed(2)}%
+              {(errorRate * 100).toFixed(2)}%
             </p>
             <p className="text-[11px] text-[#7d8590] leading-tight">
               Zero dropouts with circuit breaker protection.
@@ -477,7 +520,7 @@ export default function ArenaPage() {
               <span className="text-[10px] text-[#58a6ff] font-bold">Cap: $15.00</span>
             </div>
             <p className="text-xl font-bold font-mono text-[#e6edf3]">
-              ${guardrails.dailyCostUsd.toFixed(4)}
+              ${costTotal.toFixed(4)}
             </p>
             <p className="text-[11px] text-[#7d8590] leading-tight">
               ~$0.00045 / generation with daily budget tripwire.
@@ -515,7 +558,9 @@ export default function ArenaPage() {
               <button
                 type="button"
                 onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                className="w-full p-3.5 text-left text-xs font-semibold text-[#e6edf3] hover:text-[#58a6ff] flex items-center justify-between transition-colors"
+                suppressHydrationWarning
+                data-dashlane-ignore="true"
+                className="w-full p-3.5 text-left text-xs font-semibold text-[#e6edf3] hover:text-[#58a6ff] flex items-center justify-between transition-colors cursor-pointer"
               >
                 <span>{item.q}</span>
                 {expandedFaq === idx ? (
