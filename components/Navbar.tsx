@@ -48,19 +48,49 @@ export function Navbar() {
               <Menu className="w-4 h-4" />
             </button>
 
-            {/* GitHub Octocat Mark SVG */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <svg
-                height="32"
-                aria-hidden="true"
-                viewBox="0 0 16 16"
-                version="1.1"
-                width="32"
-                className="fill-[#e6edf3] group-hover:fill-[#2f81f7] transition-colors"
-              >
-                <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
-              </svg>
-              <span className="font-semibold text-sm tracking-tight text-[#e6edf3]">
+            {/* BulletProof Brand Mark */}
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 rounded-full bg-[#161b22] border border-[#30363d] group-hover:border-[#58a6ff] flex items-center justify-center transition-all shadow-sm group-hover:shadow-[0_0_12px_rgba(88,166,255,0.25)]">
+                <svg
+                  height="22"
+                  viewBox="0 0 32 32"
+                  width="22"
+                  className="transition-transform group-hover:scale-105"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Shield Contour */}
+                  <path
+                    d="M16 4L6 8.5V16C6 22.8 10.3 27.2 16 28.8C21.7 27.2 26 22.8 26 16V8.5L16 4Z"
+                    fill="#0d1117"
+                    stroke="#58a6ff"
+                    strokeWidth="1.75"
+                    strokeLinejoin="round"
+                  />
+                  {/* High-Velocity Bullet Projectile */}
+                  <path
+                    d="M16 8C14.2 11 13.5 14 13.5 17.5V22H18.5V17.5C18.5 14 17.8 11 16 8Z"
+                    fill="url(#bulletGradient)"
+                  />
+                  {/* Bullet Rim / Base */}
+                  <rect x="13" y="21" width="6" height="2" rx="0.5" fill="#30363d" />
+                  {/* Verified Checkmark / Armor Spark */}
+                  <path
+                    d="M14.5 16.5L15.7 17.7L18 14.5"
+                    stroke="#ffffff"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <defs>
+                    <linearGradient id="bulletGradient" x1="16" y1="8" x2="16" y2="22" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#2ea043" />
+                      <stop offset="1" stopColor="#238636" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <span className="font-semibold text-sm tracking-tight text-[#e6edf3] group-hover:text-white transition-colors">
                 Dashboard
               </span>
             </Link>
