@@ -67,6 +67,7 @@ export default function WorkbenchPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [activeVariant, setActiveVariant] = useState<VariantKey>('impact');
   const [showWinnerBanner, setShowWinnerBanner] = useState(false);
+  const [optInLogging, setOptInLogging] = useState(false);
   const [showFlagsmithModal, setShowFlagsmithModal] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -123,7 +124,7 @@ export default function WorkbenchPage() {
       const res = await fetch('/api/rewrite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bullet: bullet.trim(), role: selectedRole }),
+        body: JSON.stringify({ bullet: bullet.trim(), role: selectedRole, optIn: optInLogging }),
       });
 
       const data = await res.json();
@@ -335,6 +336,22 @@ export default function WorkbenchPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Privacy & Opt-in Text Retention Toggle (PRD FR-10) */}
+          <div className="flex items-center justify-between px-1 text-[11px] text-[#8b949e]">
+            <label className="flex items-center gap-2 cursor-pointer hover:text-[#e6edf3] transition-colors select-none">
+              <input
+                type="checkbox"
+                checked={optInLogging}
+                onChange={(e) => setOptInLogging(e.target.checked)}
+                className="rounded bg-[#161b22] border-[#30363d] text-[#2ea043] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+              />
+              <span>Allow anonymous bullet logging to improve AI prompt models</span>
+            </label>
+            <span className="text-[10px] font-mono text-[#7d8590] hidden sm:inline">
+              Privacy-by-Design: zero raw text stored by default (SHA-256)
+            </span>
           </div>
 
           {/* Quick Clickable Example Bullets */}

@@ -12,6 +12,7 @@ import crypto from 'crypto';
 const RewriteRequestSchema = z.object({
   bullet: z.string().min(10, 'Bullet must be at least 10 characters').max(500, 'Bullet cannot exceed 500 characters'),
   role: z.string().max(60).optional(),
+  optIn: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -82,7 +83,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { bullet, role } = parseResult.data;
+    const { bullet, role, optIn } = parseResult.data;
 
     // 5. Evaluate Flagsmith flags for this anonymous identity
     const flags = await evaluateFlags(sessionId, {
@@ -133,6 +134,11 @@ export async function POST(req: NextRequest) {
       tokens_out: Math.ceil(suggestions.reduce((acc, s) => acc + s.text.length, 0) / 4),
       cost_usd: costEstimate,
     });
+
+    // Optional user opt-in for model training & analysis (PRD FR-10)
+    if (optIn) {
+      db.storeRewriteText(rewriteId, bullet, suggestions);
+    }
 
     // 8. Track exposure event
     await track({

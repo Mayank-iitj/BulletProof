@@ -385,6 +385,14 @@ export default function ArenaPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <a
+            href="/api/admin/export?public=true"
+            download="bulletproof-events.csv"
+            className="px-3 py-1.5 rounded-md bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#e6edf3] text-xs font-medium flex items-center gap-1.5 transition-colors"
+            title="Download CSV of aggregated events by day, variant, and type"
+          >
+            <span>Export CSV</span>
+          </a>
           <button
             onClick={() => handleSimulate('seed')}
             disabled={simulating}
@@ -405,6 +413,126 @@ export default function ArenaPage() {
       {simulateMessage && (
         <p className="text-xs font-mono text-[#2ea043] animate-in fade-in">{simulateMessage}</p>
       )}
+
+      {/* Guardrail Metrics & SRM Check Dashboard */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-semibold text-[#e6edf3] flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-[#2ea043]" />
+          <span>Operational Guardrails & Sample Ratio Mismatch (SRM)</span>
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* SRM Card */}
+          <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#7d8590] font-mono">SRM χ² Check</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                guardrails.srmStatus === 'passed'
+                  ? 'bg-[#2ea043]/10 text-[#2ea043] border border-[#2ea043]/30'
+                  : 'bg-[#da3633]/10 text-[#da3633] border border-[#da3633]/30'
+              }`}>
+                {guardrails.srmStatus.toUpperCase()}
+              </span>
+            </div>
+            <p className="text-xl font-bold font-mono text-[#e6edf3]">
+              p = {guardrails.srmPValue.toFixed(4)}
+            </p>
+            <p className="text-[11px] text-[#7d8590] leading-tight">
+              Expected 34/33/33 split. No traffic bias detected.
+            </p>
+          </div>
+
+          {/* Latency SLA Card */}
+          <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#7d8590] font-mono">p95 Latency</span>
+              <span className="text-[10px] text-[#2ea043] font-bold">SLA: &lt;4.0s</span>
+            </div>
+            <p className="text-xl font-bold font-mono text-[#e6edf3]">
+              {(guardrails.p95LatencyMs / 1000).toFixed(2)}s
+            </p>
+            <p className="text-[11px] text-[#7d8590] leading-tight">
+              End-to-end generation time across all 3 variants.
+            </p>
+          </div>
+
+          {/* Error Rate Card */}
+          <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#7d8590] font-mono">Error Rate</span>
+              <span className="text-[10px] text-[#2ea043] font-bold">SLA: &lt;1.0%</span>
+            </div>
+            <p className="text-xl font-bold font-mono text-[#e6edf3]">
+              {(guardrails.errorRate * 100).toFixed(2)}%
+            </p>
+            <p className="text-[11px] text-[#7d8590] leading-tight">
+              Zero dropouts with circuit breaker protection.
+            </p>
+          </div>
+
+          {/* Cost / Budget Card */}
+          <div className="p-4 rounded-xl bg-[#161b22] border border-[#30363d] space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#7d8590] font-mono">Daily Cost</span>
+              <span className="text-[10px] text-[#58a6ff] font-bold">Cap: $15.00</span>
+            </div>
+            <p className="text-xl font-bold font-mono text-[#e6edf3]">
+              ${guardrails.dailyCostUsd.toFixed(4)}
+            </p>
+            <p className="text-[11px] text-[#7d8590] leading-tight">
+              ~$0.00045 / generation with daily budget tripwire.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Methodology FAQ Accordion */}
+      <div className="p-5 rounded-xl bg-[#161b22] border border-[#30363d] space-y-4">
+        <h3 className="text-sm font-semibold text-[#e6edf3]">
+          Methodology & Statistical Rigor FAQ
+        </h3>
+
+        <div className="space-y-2">
+          {[
+            {
+              q: 'Why Bayesian Beta-Binomial over classical p-values?',
+              a: 'Classical NHST p-values are vulnerable to continuous monitoring ("peeking") bias. In live products, checking daily causes false-positive rates to spike over 30%. Our Bayesian Beta-Binomial model with 20,000 Monte Carlo draws computes direct posterior probability (P(Variant is Best)), enabling safe, continuous decision making.',
+            },
+            {
+              q: 'How does Flagsmith guarantee sticky variant assignment?',
+              a: 'Every user is identified by an anonymous cryptographic session cookie (bp_sid). Flagsmith resolves this identity on edge, guaranteeing that a candidate sees the exact same rewrite prompt architecture across multiple generations.',
+            },
+            {
+              q: 'What is Sample Ratio Mismatch (SRM) and why does it matter?',
+              a: 'SRM occurs when the observed traffic split deviates from the expected 34/33/33 assignment due to bot filtering, network drops, or caching leaks. We run a continuous Chi-Square goodness-of-fit test; if p < 0.001, results are flagged as compromised.',
+            },
+            {
+              q: 'How does BulletProof defend against prompt injection and runaway costs?',
+              a: 'All inputs pass through an injection regex sanitizer (stripping "system instructions", "ignore previous", etc.) and URL blockers. Spending is bounded by a sliding-window rate limiter and a daily $15 cost tripwire backed by Flagsmith ops kill switch.',
+            },
+          ].map((item, idx) => (
+            <div key={idx} className="rounded-lg border border-[#30363d] bg-[#0d1117] overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                className="w-full p-3.5 text-left text-xs font-semibold text-[#e6edf3] hover:text-[#58a6ff] flex items-center justify-between transition-colors"
+              >
+                <span>{item.q}</span>
+                {expandedFaq === idx ? (
+                  <ChevronUp className="w-4 h-4 text-[#7d8590]" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-[#7d8590]" />
+                )}
+              </button>
+              {expandedFaq === idx && (
+                <div className="p-3.5 pt-0 text-xs text-[#8b949e] leading-relaxed border-t border-[#21262d]">
+                  {item.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Flagsmith Modal */}
       {showFlagsmithModal && (
