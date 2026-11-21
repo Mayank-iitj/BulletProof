@@ -86,3 +86,51 @@ body {
   background-color: #30363d;
   border-color: #8b949e;
 }
+
+/* ==========================================================================
+   Editorial Studio Landing Page Styles (Inter, Difference Cursor, Marquee)
+   ========================================================================== */
+
+.studio-cursor-none,
+.studio-cursor-none * {
+  cursor: none !important;
+}
+
+@keyframes studioMarquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-studio-marquee {
+  display: flex;
+  width: max-content;
+  animation: studioMarquee 30s linear infinite;
+}
+
+.animate-studio-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes studioReveal {
+  0% {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+.animate-studio-reveal {
+  animation: studioReveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.studio-ease {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+

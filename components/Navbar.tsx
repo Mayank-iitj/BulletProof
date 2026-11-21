@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Search,
   Bell,
@@ -15,6 +16,7 @@ import {
 import { FlagsmithControlPanel } from './FlagsmithControlPanel';
 
 export function Navbar() {
+  const pathname = usePathname();
   const [showFlagsmithPanel, setShowFlagsmithPanel] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -34,6 +36,10 @@ export function Navbar() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  if (pathname === '/landing') {
+    return null;
+  }
 
   return (
     <>
@@ -93,6 +99,13 @@ export function Navbar() {
               </Link>
               <Link href="/method" className="hover:text-[#e6edf3] transition-colors">
                 Methodology
+              </Link>
+              <Link
+                href="/landing"
+                className="text-[#f0883e] hover:text-[#e6edf3] transition-colors flex items-center gap-1 font-semibold"
+                title="Bold Editorial Studio Landing Page"
+              >
+                <span>✦</span> Studio
               </Link>
             </nav>
           </div>
