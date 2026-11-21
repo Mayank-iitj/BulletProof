@@ -139,11 +139,11 @@ export default function ArenaPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#e6edf3] tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#e6edf3] tracking-tight flex items-center gap-2.5">
             <BarChart2 className="w-6 h-6 text-[#2f81f7]" />
             <span>The Arena — Experiment Insights</span>
           </h1>
-          <p className="text-[#7d8590] text-sm max-w-3xl leading-relaxed">
+          <p className="text-[#8b949e] text-sm max-w-3xl leading-relaxed">
             <strong className="text-[#e6edf3]">Pre-Registered Hypothesis:</strong> {experiment.hypothesis}
           </p>
         </div>

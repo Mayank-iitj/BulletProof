@@ -9,24 +9,17 @@ import { RightRail } from '@/components/RightRail';
 import { FlagsmithControlPanel } from '@/components/FlagsmithControlPanel';
 import {
   Send,
-  Sparkles,
-  Paperclip,
   Check,
   Copy,
   RotateCw,
   Sliders,
   Filter,
-  Smile,
   ThumbsUp,
-  Heart,
-  Rocket,
-  MoreHorizontal,
-  ChevronDown,
-  Tag,
+  ThumbsDown,
   AlertCircle,
   HelpCircle,
-  CheckCircle2,
-  ExternalLink,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 
 const EXAMPLE_BULLETS = [
@@ -69,7 +62,7 @@ export default function WorkbenchPage() {
   const [rewriteId, setRewriteId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [revealToast, setRevealToast] = useState<{ variant: VariantKey; label: string } | null>(null);
-  const [reactions, setReactions] = useState<Record<string, Record<string, number>>>({});
+  const [ratings, setRatings] = useState<Record<string, 'up' | 'down'>>({});
   const [error, setError] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [showFlagsmithModal, setShowFlagsmithModal] = useState(false);
@@ -165,53 +158,57 @@ export default function WorkbenchPage() {
     }
   };
 
-  const handleReaction = (suggestionId: string, emoji: string) => {
-    setReactions((prev) => {
-      const current = prev[suggestionId] || { '👍': 4, '🚀': 2, '❤️': 1 };
-      return {
-        ...prev,
-        [suggestionId]: {
-          ...current,
-          [emoji]: (current[emoji] || 0) + 1,
-        },
-      };
-    });
+  const handleRating = async (suggestionId: string, value: 'up' | 'down') => {
+    setRatings((prev) => ({ ...prev, [suggestionId]: value }));
+
+    fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'rating_submitted',
+        rewriteId,
+        suggestionId,
+        props: { value },
+      }),
+    }).catch(() => {});
   };
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 py-6" suppressHydrationWarning>
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Left Sidebar */}
-        <Sidebar
-          onNewBulletClick={() => {
-            setBullet('');
-            inputRef.current?.focus();
-          }}
-          onOpenFlagsmith={() => setShowFlagsmithModal(true)}
-        />
+        {/* Left Sidebar (Desktop first, on mobile collapses below input) */}
+        <div className="order-2 lg:order-1 w-full lg:w-72">
+          <Sidebar
+            onNewBulletClick={() => {
+              setBullet('');
+              inputRef.current?.focus();
+            }}
+            onOpenFlagsmith={() => setShowFlagsmithModal(true)}
+          />
+        </div>
 
-        {/* Center Main Dashboard Area (matches user screenshot) */}
-        <div className="flex-1 w-full max-w-3xl space-y-6">
-          {/* Header with Preview Badge */}
+        {/* Center Main Dashboard Area */}
+        <div className="order-1 lg:order-2 flex-1 w-full max-w-3xl space-y-5">
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-[#e6edf3]">Home</h1>
+              <h1 className="text-xl font-semibold text-[#e6edf3]">Workbench</h1>
               <span className="px-2 py-0.5 rounded-full border border-[#2ea043]/30 bg-[#2ea043]/10 text-[#2ea043] text-[11px] font-medium">
-                Preview ▾
+                Live
               </span>
             </div>
             <button
               onClick={() => setShowFlagsmithModal(true)}
-              className="text-xs text-[#7d8590] hover:text-[#2f81f7] flex items-center gap-1 font-mono"
+              className="text-xs text-[#8b949e] hover:text-[#2f81f7] flex items-center gap-1 font-mono transition-colors"
             >
-              <span>Flagsmith A/B/C</span>
-              <Sliders className="w-3 h-3" />
+              <span>Flagsmith A/B/C Console</span>
+              <Sliders className="w-3.5 h-3.5 text-[#2ea043]" />
             </button>
           </div>
 
           {/* Paused alert if kill switch active */}
           {isPaused && (
-            <div className="p-3 rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 text-[#f85149] text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-lg bg-[#da3633]/10 border border-[#da3633]/30 text-[#f85149] text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>
                 AI Generation is paused via Flagsmith ops kill switch. Toggle off in Flagsmith Console to resume.
@@ -219,8 +216,8 @@ export default function WorkbenchPage() {
             </div>
           )}
 
-          {/* GitHub Copilot Style Input Box (Identical to screenshot) */}
-          <div className="rounded-2xl border border-[#30363d] bg-[#0d1117] focus-within:border-[#2f81f7] focus-within:ring-1 focus-within:ring-[#2f81f7] transition-all shadow-sm">
+          {/* GitHub Copilot Style Input Box */}
+          <div className="rounded-xl border border-[#30363d] bg-[#0d1117] focus-within:border-[#2f81f7] focus-within:ring-1 focus-within:ring-[#2f81f7] transition-all shadow-sm">
             <div className="p-4">
               <textarea
                 ref={inputRef}
@@ -230,8 +227,8 @@ export default function WorkbenchPage() {
                   setBullet(e.target.value);
                   if (error) setError(null);
                 }}
-                placeholder="Ask anything. Paste a weak resume bullet. Type @ to attach target role..."
-                className="w-full bg-transparent text-[#e6edf3] placeholder:text-[#7d8590] text-sm focus:outline-none resize-none leading-relaxed"
+                placeholder="Paste a weak resume bullet (e.g. Worked on backend of project)..."
+                className="w-full bg-transparent text-[#e6edf3] placeholder:text-[#8b949e] text-sm focus:outline-none resize-none leading-relaxed"
               />
 
               {/* Bottom inner toolbar */}
@@ -241,11 +238,11 @@ export default function WorkbenchPage() {
                   <button
                     type="button"
                     onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#161b22] border border-[#30363d] hover:bg-[#21262d] text-xs font-medium text-[#e6edf3] transition-colors"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] hover:bg-[#21262d] text-xs font-medium text-[#e6edf3] transition-colors"
                   >
                     <span>+</span>
                     <span>{role}</span>
-                    <ChevronDown className="w-3 h-3 text-[#7d8590]" />
+                    <ChevronDown className="w-3 h-3 text-[#8b949e]" />
                   </button>
 
                   {roleDropdownOpen && (
@@ -271,8 +268,8 @@ export default function WorkbenchPage() {
                 </div>
 
                 {/* Right controls: character count & submit button */}
-                <div className="flex items-center gap-2">
-                  <span className={`text-[11px] font-mono ${bullet.length > 500 ? 'text-[#f85149] font-bold' : 'text-[#7d8590]'}`}>
+                <div className="flex items-center gap-2.5">
+                  <span className={`text-[11px] font-mono ${bullet.length > 500 ? 'text-[#f85149] font-bold' : 'text-[#8b949e]'}`}>
                     {bullet.length}/500
                   </span>
 
@@ -280,13 +277,19 @@ export default function WorkbenchPage() {
                     type="button"
                     disabled={loading || bullet.trim().length < 10 || bullet.length > 500}
                     onClick={() => handleRewrite()}
-                    className="p-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white font-medium text-xs flex items-center justify-center transition-all disabled:cursor-not-allowed shadow-sm"
+                    className="px-3 py-1.5 rounded-md bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 text-white font-medium text-xs flex items-center gap-1.5 transition-all disabled:cursor-not-allowed shadow-sm"
                     title="Rewrite bullet (⌘ + Enter)"
                   >
                     {loading ? (
-                      <RotateCw className="w-4 h-4 animate-spin" />
+                      <>
+                        <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Engineering...</span>
+                      </>
                     ) : (
-                      <Send className="w-4 h-4" />
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Rewrite</span>
+                      </>
                     )}
                   </button>
                 </div>
@@ -295,30 +298,18 @@ export default function WorkbenchPage() {
           </div>
 
           {/* Quick Clickable Example Bullets */}
-          <div className="flex items-center gap-2 flex-wrap text-xs text-[#7d8590]">
-            <span className="text-[11px]">Quick examples:</span>
+          <div className="flex items-center gap-2 flex-wrap text-xs text-[#8b949e]">
+            <span className="text-[11px] text-[#8b949e]">Try example:</span>
             {EXAMPLE_BULLETS.slice(0, 3).map((ex, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setBullet(ex)}
-                className="px-2.5 py-1 rounded-md bg-[#161b22] border border-[#30363d] hover:border-[#7d8590] text-[#7d8590] hover:text-[#e6edf3] text-xs transition-colors truncate max-w-xs"
+                className="px-2.5 py-1 rounded-md bg-[#161b22] border border-[#30363d] hover:border-[#8b949e] text-[#8b949e] hover:text-[#e6edf3] text-xs transition-colors truncate max-w-xs"
               >
                 &ldquo;{ex}&rdquo;
               </button>
             ))}
-          </div>
-
-          {/* Sub-bar options (matches screenshot: Chat Personal, Cloud, etc.) */}
-          <div className="flex items-center gap-4 text-xs font-mono text-[#7d8590] px-1">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2ea043]"></span>
-              <span>Flagsmith Multivariate Active</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#2f81f7]"></span>
-              <span>Claude Haiku (MODEL_ID)</span>
-            </span>
           </div>
 
           {/* Error Message */}
@@ -329,22 +320,22 @@ export default function WorkbenchPage() {
             </div>
           )}
 
-          {/* Post-Action Reveal Toast styled like GitHub PR notification */}
+          {/* Post-Action Reveal Toast */}
           {revealToast && (
-            <div className="p-4 rounded-xl bg-[#161b22] border-2 border-[#2ea043]/50 shadow-lg flex items-center justify-between gap-4 animate-in fade-in duration-200">
+            <div className="p-3.5 rounded-xl bg-[#161b22] border-2 border-[#2ea043]/50 shadow-lg flex items-center justify-between gap-4 animate-in fade-in duration-200">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#2ea043]/20 border border-[#2ea043] flex items-center justify-center text-[#2ea043] font-bold text-xs">
+                <div className="w-7 h-7 rounded-full bg-[#2ea043]/20 border border-[#2ea043] flex items-center justify-center text-[#2ea043] font-bold text-xs">
                   ✓
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-[#e6edf3]">
-                    Experiment Variant Revealed:{' '}
-                    <span className="text-[#2ea043] font-bold underline">
+                    Variant Revealed:{' '}
+                    <span className="text-[#2ea043] font-bold">
                       {revealToast.label}
                     </span>
                   </p>
-                  <p className="text-[11px] text-[#7d8590]">
-                    Your anonymous session tested this variant. Check its live win probability in the Arena!
+                  <p className="text-[11px] text-[#8b949e]">
+                    Your session is evaluating this style. Check its live Bayesian win rate in the Arena!
                   </p>
                 </div>
               </div>
@@ -357,49 +348,48 @@ export default function WorkbenchPage() {
             </div>
           )}
 
-          {/* GitHub Style Feed Section (matches screenshot) */}
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-[#e6edf3]">Feed</h2>
-              <button
-                type="button"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#161b22] border border-[#30363d] hover:bg-[#21262d] text-xs text-[#7d8590] hover:text-[#e6edf3]"
-              >
-                <Filter className="w-3.5 h-3.5" />
-                <span>Filter</span>
-              </button>
+          {/* Suggestions List (Cleaned of AI Slop) */}
+          <div className="space-y-3.5 pt-1">
+            <div className="flex items-center justify-between text-xs text-[#8b949e]">
+              <h2 className="text-sm font-semibold text-[#e6edf3]">Recruiter-Ready Suggestions</h2>
+              <span>Click to copy any bullet</span>
             </div>
 
-            {/* GitHub Release Card format for Suggestions */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {suggestions.map((suggestion, idx) => {
                 const isCopied = copiedId === suggestion.id;
-                const reactionMap = reactions[suggestion.id] || { '👍': 12, '🚀': 5, '❤️': 3 };
+                const currentRating = ratings[suggestion.id];
+                const wordCount = suggestion.text.split(/\s+/).filter(Boolean).length;
 
                 return (
                   <div
                     key={suggestion.id}
-                    className="rounded-xl bg-[#161b22] border border-[#30363d] overflow-hidden transition-all shadow-sm"
+                    className={`rounded-xl bg-[#161b22] border transition-all ${
+                      isCopied ? 'border-[#2ea043] shadow-sm' : 'border-[#30363d] hover:border-[#8b949e]/50'
+                    }`}
                   >
-                    {/* Release Card Header (matches GitHub screenshot) */}
-                    <div className="px-5 py-3 border-b border-[#30363d] bg-[#0d1117] flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-6 h-6 rounded-md bg-[#2ea043]/10 border border-[#2ea043]/30 flex items-center justify-center font-bold text-[#2ea043] text-xs">
-                          v
-                        </div>
-                        <div className="text-xs">
-                          <span className="font-semibold text-[#e6edf3]">
-                            bulletproof-ai/suggestion-{idx + 1}
-                          </span>{' '}
-                          <span className="text-[#7d8590]">released · just now</span>
-                        </div>
-                      </div>
+                    {/* Suggestion Card Body */}
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2 text-xs font-mono text-[#8b949e]">
+                            <span className="w-5 h-5 rounded bg-[#0d1117] border border-[#30363d] flex items-center justify-center font-bold text-[#e6edf3] text-[11px]">
+                              {idx + 1}
+                            </span>
+                            <span>Suggestion {idx + 1}</span>
+                            <span>·</span>
+                            <span>{wordCount} words</span>
+                          </div>
 
-                      <div className="flex items-center gap-1">
+                          <div className="text-sm text-[#e6edf3] leading-relaxed pt-1">
+                            <HighlightedText text={suggestion.text} />
+                          </div>
+                        </div>
+
                         <button
                           type="button"
                           onClick={() => handleCopy(suggestion)}
-                          className={`px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
+                          className={`shrink-0 px-3.5 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-all ${
                             isCopied
                               ? 'bg-[#238636] text-white shadow-sm'
                               : 'bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] border border-[#30363d]'
@@ -412,66 +402,44 @@ export default function WorkbenchPage() {
                             </>
                           ) : (
                             <>
-                              <Copy className="w-3.5 h-3.5 text-[#7d8590]" />
-                              <span>Copy Bullet</span>
+                              <Copy className="w-3.5 h-3.5 text-[#8b949e]" />
+                              <span>Copy</span>
                             </>
                           )}
                         </button>
                       </div>
-                    </div>
 
-                    {/* Release Card Body (GitHub Markdown style) */}
-                    <div className="p-5 space-y-3">
-                      <h3 className="text-base font-bold text-[#e6edf3] flex items-center gap-2">
-                        <span>v1.{idx + 1}.0 — Recruiter-Ready Rewrite</span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-[#30363d] text-[#7d8590] bg-[#0d1117]">
-                          Latest
+                      {/* Card Footer Bar: Metrics explanation & Feedback */}
+                      <div className="pt-2.5 border-t border-[#21262d] flex items-center justify-between text-xs text-[#8b949e]">
+                        <span className="text-[11px]">
+                          Replace <code className="text-[#58a6ff]">[X%]</code> with your genuine metrics.
                         </span>
-                      </h3>
 
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold text-[#7d8590] uppercase tracking-wider">
-                          What&apos;s Changed
-                        </p>
-                        <div className="p-3.5 rounded-lg bg-[#0d1117] border border-[#30363d] text-sm text-[#e6edf3] leading-relaxed">
-                          <ul className="list-disc list-inside space-y-1">
-                            <li>
-                              <HighlightedText text={suggestion.text} />
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Tooltip notice */}
-                      <p className="text-[11px] text-[#7d8590] flex items-center gap-1.5">
-                        <HelpCircle className="w-3.5 h-3.5" />
-                        <span>
-                          Bracketed badges like <code className="text-[#58a6ff]">[X%]</code> are metric placeholders for your resume.
-                        </span>
-                      </p>
-
-                      {/* GitHub Style Reactions Bar (matches screenshot) */}
-                      <div className="pt-2 border-t border-[#21262d] flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          {Object.entries(reactionMap).map(([emoji, count]) => (
-                            <button
-                              key={emoji}
-                              type="button"
-                              onClick={() => handleReaction(suggestion.id, emoji)}
-                              className="px-2 py-1 rounded-full bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] text-xs text-[#7d8590] hover:text-[#e6edf3] flex items-center gap-1 transition-colors"
-                            >
-                              <span>{emoji}</span>
-                              <span className="font-mono text-[11px]">{count}</span>
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Contributor badge */}
-                        <div className="flex items-center gap-1.5 text-[11px] text-[#7d8590]">
-                          <span>Engineered by</span>
-                          <span className="px-1.5 py-0.5 rounded border border-[#30363d] bg-[#0d1117] text-[#e6edf3] font-mono text-[10px]">
-                            Flagsmith Team Impact
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRating(suggestion.id, 'up')}
+                            className={`p-1 rounded border transition-colors ${
+                              currentRating === 'up'
+                                ? 'bg-[#2ea043]/20 border-[#2ea043] text-[#2ea043]'
+                                : 'bg-[#0d1117] border-[#30363d] hover:border-[#8b949e] text-[#8b949e]'
+                            }`}
+                            title="Helpful rewrite"
+                          >
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRating(suggestion.id, 'down')}
+                            className={`p-1 rounded border transition-colors ${
+                              currentRating === 'down'
+                                ? 'bg-[#da3633]/20 border-[#da3633] text-[#da3633]'
+                                : 'bg-[#0d1117] border-[#30363d] hover:border-[#8b949e] text-[#8b949e]'
+                            }`}
+                            title="Needs revision"
+                          >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -483,7 +451,9 @@ export default function WorkbenchPage() {
         </div>
 
         {/* Right Rail */}
-        <RightRail />
+        <div className="order-3 w-full lg:w-80">
+          <RightRail />
+        </div>
       </div>
 
       {/* Flagsmith Modal */}

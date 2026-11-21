@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Search,
@@ -8,11 +8,8 @@ import {
   Plus,
   GitPullRequest,
   CircleDot,
-  Inbox,
   Menu,
   ChevronDown,
-  Activity,
-  Layers,
   Settings,
 } from 'lucide-react';
 import { FlagsmithControlPanel } from './FlagsmithControlPanel';
@@ -20,6 +17,23 @@ import { FlagsmithControlPanel } from './FlagsmithControlPanel';
 export function Navbar() {
   const [showFlagsmithPanel, setShowFlagsmithPanel] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Global '/' keyboard shortcut to focus search bar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === '/' &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA'
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <>
@@ -29,7 +43,7 @@ export function Navbar() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-md hover:bg-[#21262d] border border-[#30363d] text-[#7d8590] hover:text-[#e6edf3] md:hidden"
+              className="p-1.5 rounded-md hover:bg-[#21262d] border border-[#30363d] text-[#8b949e] hover:text-[#e6edf3] md:hidden"
             >
               <Menu className="w-4 h-4" />
             </button>
@@ -51,16 +65,16 @@ export function Navbar() {
               </span>
             </Link>
 
-            <span className="text-[#7d8590] hidden sm:inline">/</span>
+            <span className="text-[#8b949e] hidden sm:inline">/</span>
             <Link
               href="/"
-              className="text-xs font-semibold text-[#7d8590] hover:text-[#2f81f7] hidden sm:inline transition-colors"
+              className="text-xs font-semibold text-[#8b949e] hover:text-[#2f81f7] hidden sm:inline transition-colors"
             >
               BulletProof
             </Link>
 
             {/* Quick Links */}
-            <nav className="hidden lg:flex items-center gap-3 ml-4 text-xs font-medium text-[#7d8590]">
+            <nav className="hidden lg:flex items-center gap-3 ml-4 text-xs font-medium text-[#8b949e]">
               <Link href="/" className="hover:text-[#e6edf3] transition-colors">
                 Workbench
               </Link>
@@ -77,13 +91,14 @@ export function Navbar() {
           {/* Center: GitHub Search Bar */}
           <div className="flex-1 max-w-md hidden md:block">
             <div className="relative flex items-center">
-              <Search className="w-3.5 h-3.5 absolute left-3 text-[#7d8590]" />
+              <Search className="w-3.5 h-3.5 absolute left-3 text-[#8b949e]" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Type / to search"
-                className="w-full pl-8 pr-12 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] text-xs text-[#e6edf3] placeholder:text-[#7d8590] focus:outline-none focus:border-[#2f81f7] focus:ring-1 focus:ring-[#2f81f7] transition-all"
+                className="w-full pl-8 pr-12 py-1.5 rounded-md bg-[#161b22] border border-[#30363d] text-xs text-[#e6edf3] placeholder:text-[#8b949e] focus:outline-none focus:border-[#2f81f7] focus:ring-1 focus:ring-[#2f81f7] transition-all"
               />
-              <span className="absolute right-2.5 px-1.5 py-0.5 rounded border border-[#30363d] bg-[#21262d] text-[10px] font-mono text-[#7d8590]">
+              <span className="absolute right-2.5 px-1.5 py-0.5 rounded border border-[#30363d] bg-[#21262d] text-[10px] font-mono text-[#8b949e]">
                 /
               </span>
             </div>
@@ -105,21 +120,21 @@ export function Navbar() {
               <span className="text-[#e6edf3] group-hover:text-[#2ea043] font-mono text-[11px]">
                 Flagsmith Cloud
               </span>
-              <ChevronDown className="w-3 h-3 text-[#7d8590]" />
+              <ChevronDown className="w-3 h-3 text-[#8b949e]" />
             </button>
 
             {/* Create New Dropdown */}
             <div className="hidden sm:flex items-center gap-1">
               <Link
                 href="/arena"
-                className="p-1.5 rounded-md hover:bg-[#21262d] text-[#7d8590] hover:text-[#e6edf3] transition-colors"
+                className="p-1.5 rounded-md hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                 title="View Arena Experiments"
               >
                 <GitPullRequest className="w-4 h-4" />
               </Link>
               <Link
                 href="/method"
-                className="p-1.5 rounded-md hover:bg-[#21262d] text-[#7d8590] hover:text-[#e6edf3] transition-colors"
+                className="p-1.5 rounded-md hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                 title="Method & Guardrails"
               >
                 <CircleDot className="w-4 h-4" />
@@ -127,7 +142,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setShowFlagsmithPanel(true)}
-                className="p-1.5 rounded-md hover:bg-[#21262d] text-[#7d8590] hover:text-[#e6edf3] transition-colors"
+                className="p-1.5 rounded-md hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] transition-colors"
                 title="Flagsmith Flags"
               >
                 <Settings className="w-4 h-4" />
