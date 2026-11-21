@@ -174,10 +174,7 @@ export function Navbar() {
               </button>
             </div>
 
-            {/* User Profile Avatar */}
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#238636] to-[#2f81f7] border border-[#30363d] flex items-center justify-center font-bold text-white text-xs">
-              M
-            </div>
+
           </div>
         </div>
       </header>
