@@ -45,12 +45,27 @@ const ROLES = [
   'Data Scientist',
 ];
 
+const DEFAULT_SUGGESTIONS: Suggestion[] = [
+  {
+    id: 's1',
+    text: 'Boosted throughput by [X%] by engineering backend microservices in Node.js, serving [N] daily requests without degradation.',
+  },
+  {
+    id: 's2',
+    text: 'Reduced query latency by [X%] by designing Redis caching layer, saving [$Y] in cloud compute overhead.',
+  },
+  {
+    id: 's3',
+    text: 'Automated CI/CD deployment pipelines across [N] repositories, accelerating developer release velocity by [X%].',
+  },
+];
+
 export default function WorkbenchPage() {
   const [bullet, setBullet] = useState('');
   const [role, setRole] = useState('Autopilot (Default)');
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(DEFAULT_SUGGESTIONS);
   const [rewriteId, setRewriteId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [revealToast, setRevealToast] = useState<{ variant: VariantKey; label: string } | null>(null);
@@ -59,25 +74,6 @@ export default function WorkbenchPage() {
   const [isPaused, setIsPaused] = useState(false);
   const [showFlagsmithModal, setShowFlagsmithModal] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  // Initial suggestions display
-  useEffect(() => {
-    // Generate an initial default set so the GitHub feed looks lively immediately
-    setSuggestions([
-      {
-        id: 's1',
-        text: 'Boosted throughput by [X%] by engineering backend microservices in Node.js, serving [N] daily requests without degradation.',
-      },
-      {
-        id: 's2',
-        text: 'Reduced query latency by [X%] by designing Redis caching layer, saving [$Y] in cloud compute overhead.',
-      },
-      {
-        id: 's3',
-        text: 'Automated CI/CD deployment pipelines across [N] repositories, accelerating developer release velocity by [X%].',
-      },
-    ]);
-  }, []);
 
   // Handle keyboard shortcut (Cmd/Ctrl + Enter)
   useEffect(() => {
@@ -183,7 +179,7 @@ export default function WorkbenchPage() {
   };
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 py-6">
+    <div className="max-w-[1440px] mx-auto px-4 py-6" suppressHydrationWarning>
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Left Sidebar */}
         <Sidebar

@@ -88,7 +88,7 @@ export default function ArenaPage() {
 
   if (loading || !data) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-20 text-center space-y-4 text-xs text-[#7d8590]">
+      <div className="max-w-6xl mx-auto px-4 py-20 text-center space-y-4 text-xs text-[#7d8590]" suppressHydrationWarning>
         <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#2f81f7]" />
         <p className="font-mono">Aggregating live telemetry from Flagsmith Edge API...</p>
       </div>
@@ -103,7 +103,7 @@ export default function ArenaPage() {
   const leader = sortedVariants[0];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 text-xs text-[#e6edf3]">
+    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 text-xs text-[#e6edf3]" suppressHydrationWarning>
       {/* Header section (GitHub Insights style) */}
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
