@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: bulletproof
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: FLAGSMITH_ENVIRONMENT_KEY
+        sync: false
+      - key: NEXT_PUBLIC_FLAGSMITH_KEY
+        sync: false
+      - key: FLAGSMITH_SERVER_KEY
+        sync: false
+      - key: FLAGSMITH_API_URL
+        value: https://edge.api.flagsmith.com/api/v1/
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: MODEL_ID
+        value: claude-haiku-5-5
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: DAILY_BUDGET_USD
+        value: "15"
+      - key: STORE_PATH
+        value: .data/store.json
