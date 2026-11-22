@@ -46,14 +46,22 @@ export interface DBStore {
 }
 
 const DATA_DIR = path.join(process.cwd(), '.data');
-const DB_FILE = path.join(DATA_DIR, 'store.json');
+
+function getDbFile(): string {
+  if (process.env.STORE_PATH) {
+    return path.resolve(process.cwd(), process.env.STORE_PATH);
+  }
+  return path.join(DATA_DIR, 'store.json');
+}
 
 function ensureDB(): DBStore {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  const dbFile = getDbFile();
+  const dir = path.dirname(dbFile);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
 
-  if (!fs.existsSync(DB_FILE)) {
+  if (!fs.existsSync(dbFile)) {
     const initial: DBStore = {
       sessions: [],
       rewrites: [],
@@ -61,12 +69,12 @@ function ensureDB(): DBStore {
       budget_ledger: {},
       rewrite_text: {},
     };
-    fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
+    fs.writeFileSync(dbFile, JSON.stringify(initial, null, 2), 'utf-8');
     return initial;
   }
 
   try {
-    const raw = fs.readFileSync(DB_FILE, 'utf-8');
+    const raw = fs.readFileSync(dbFile, 'utf-8');
     return JSON.parse(raw);
   } catch (err) {
     console.warn('[DB] Error reading store, reinitializing:', err);
@@ -82,10 +90,12 @@ function ensureDB(): DBStore {
 
 function saveDB(store: DBStore) {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    const dbFile = getDbFile();
+    const dir = path.dirname(dbFile);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(DB_FILE, JSON.stringify(store, null, 2), 'utf-8');
+    fs.writeFileSync(dbFile, JSON.stringify(store, null, 2), 'utf-8');
   } catch (err) {
     console.error('[DB] Failed to save database:', err);
   }

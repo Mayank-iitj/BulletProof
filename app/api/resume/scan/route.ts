@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionId, getSessionMetadata } from '@/lib/session';
+import { getSessionId, getSessionMetadata, SESSION_COOKIE_NAME } from '@/lib/session';
 import { evaluateFlags } from '@/lib/flags';
 import { extractTextFromPDF, analyzeResumeText } from '@/lib/resume';
 import { track } from '@/lib/tracker';
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId } = await getSessionId(req);
+    const { sessionId, isNew } = await getSessionId(req);
     const metadata = await getSessionMetadata(req);
     const flags = await evaluateFlags(sessionId, metadata);
 
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       analysis,
       flagsmithContext: {
@@ -89,6 +89,18 @@ export async function POST(req: NextRequest) {
         killSwitchArmed: flags.llm_kill_switch,
       },
     });
+
+    if (isNew) {
+      response.cookies.set(SESSION_COOKIE_NAME, sessionId, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    }
+
+    return response;
   } catch (err: any) {
     console.error('[API /api/resume/scan] Error processing PDF:', err);
     return NextResponse.json(

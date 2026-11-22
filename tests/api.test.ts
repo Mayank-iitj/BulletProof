@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { NextRequest } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+
+// Isolate test database so test suite never wipes user production store
+process.env.STORE_PATH = '.data/test_store.json';
+
 import { POST as rewritePost } from '../app/api/rewrite/route';
 import { POST as eventsPost } from '../app/api/events/route';
 import { GET as resultsGet } from '../app/api/results/route';
@@ -9,6 +15,17 @@ import { db } from '../lib/db';
 describe('Integration Tests: API Route Handlers', () => {
   beforeEach(() => {
     db.clearData();
+  });
+
+  afterAll(() => {
+    try {
+      const testFile = path.resolve(process.cwd(), '.data/test_store.json');
+      if (fs.existsSync(testFile)) {
+        fs.unlinkSync(testFile);
+      }
+    } catch {
+      // ignore
+    }
   });
 
   it('GET /api/health returns healthy status checks', async () => {

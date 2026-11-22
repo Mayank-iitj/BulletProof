@@ -92,6 +92,12 @@ export default function WorkbenchPage() {
   useEffect(() => {
     setMounted(true);
     refreshFlags();
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'pdf') {
+        setWorkbenchMode('pdf');
+      }
+    }
   }, []);
 
   // Handle keyboard shortcut (Cmd/Ctrl + Enter)
@@ -107,13 +113,15 @@ export default function WorkbenchPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [bullet, role, loading]);
 
-  const handleRewrite = async (isRegenerate = false) => {
-    if (bullet.trim().length < 10) {
+  const handleRewrite = async (isRegenerate = false, overrideBullet?: string) => {
+    const targetBullet = (overrideBullet !== undefined ? overrideBullet : bullet).trim();
+
+    if (targetBullet.length < 10) {
       setError('Please enter a bullet of at least 10 characters.');
       return;
     }
 
-    if (bullet.length > 500) {
+    if (targetBullet.length > 500) {
       setError('Bullet exceeds 500 characters.');
       return;
     }
@@ -129,7 +137,7 @@ export default function WorkbenchPage() {
       const res = await fetch('/api/rewrite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bullet: bullet.trim(), role: selectedRole, optIn: optInLogging }),
+        body: JSON.stringify({ bullet: targetBullet, role: selectedRole, optIn: optInLogging }),
       });
 
       const data = await res.json();
@@ -324,7 +332,7 @@ export default function WorkbenchPage() {
                 setWorkbenchMode('editor');
                 setTimeout(() => {
                   inputRef.current?.focus();
-                  handleRewrite();
+                  handleRewrite(false, selectedBullet);
                 }, 150);
               }}
             />

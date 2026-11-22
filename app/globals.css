@@ -88,13 +88,8 @@ body {
 }
 
 /* ==========================================================================
-   Editorial Studio Landing Page Styles (Inter, Difference Cursor, Marquee)
+   Editorial Studio Landing Page Styles (Inter, Clean UI, Marquee)
    ========================================================================== */
-
-.studio-cursor-none,
-.studio-cursor-none * {
-  cursor: none !important;
-}
 
 @keyframes studioMarquee {
   0% {

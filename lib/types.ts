@@ -41,7 +41,8 @@ export type EventType =
   | 'bullet_copied'
   | 'regenerate_clicked'
   | 'rating_submitted'
-  | 'resume_uploaded';
+  | 'resume_uploaded'
+  | 'session_started';
 
 export interface Suggestion {
   id: string;

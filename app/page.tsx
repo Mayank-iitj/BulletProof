@@ -18,53 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function StudioLandingPage() {
-  // 1. Custom Interactive Difference Cursor with Lerp (lagging smooth interpolation)
-  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
-  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
-  const [isHovered, setIsHovered] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // Track target mouse position
-  useEffect(() => {
-    // Detect touch-only devices
-    if (window.matchMedia('(pointer: coarse)').matches) {
-      setIsTouchDevice(true);
-      return;
-    }
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  // RequestAnimationFrame Lerp Loop
-  useEffect(() => {
-    if (isTouchDevice) return;
-
-    let animationFrameId: number;
-    let currentX = cursorPos.x;
-    let currentY = cursorPos.y;
-
-    const render = () => {
-      // Lerp factor 0.16 for premium smooth inertia
-      currentX += (mousePos.x - currentX) * 0.16;
-      currentY += (mousePos.y - currentY) * 0.16;
-      setCursorPos({ x: currentX, y: currentY });
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    animationFrameId = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [mousePos, isTouchDevice]);
-
-  // Hover detection on interactive tags
-  const handleMouseEnterInteractive = () => setIsHovered(true);
-  const handleMouseLeaveInteractive = () => setIsHovered(false);
 
   // Hero Staggered Characters
   const heroLetters = 'BULLETPROOF'.split('');
@@ -172,32 +126,14 @@ export default function StudioLandingPage() {
   ];
 
   return (
-    <div className="relative w-full min-h-screen bg-[#FFFFFF] text-[#000000] studio-cursor-none select-none font-sans overflow-x-hidden">
+    <div className="relative w-full min-h-screen bg-[#FFFFFF] text-[#000000] font-sans overflow-x-hidden">
       {/* Background white safety layer */}
       <div className="fixed inset-0 bg-[#FFFFFF] -z-20 pointer-events-none" />
-
-      {/* 1. Custom Interactive Difference Cursor */}
-      {!isTouchDevice && (
-        <div
-          className={`fixed pointer-events-none z-[9999] rounded-full border border-black bg-white transition-transform duration-300 studio-ease ${
-            isHovered ? 'scale-[2.5]' : 'scale-100'
-          }`}
-          style={{
-            width: '32px',
-            height: '32px',
-            left: `${cursorPos.x - 16}px`,
-            top: `${cursorPos.y - 16}px`,
-            mixBlendMode: 'difference',
-          }}
-        />
-      )}
 
       {/* 2. Fixed Navigation Header (Always visible with high-contrast text & subtle backdrop blur) */}
       <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-white/90 backdrop-blur-md border-b border-black/10 flex items-center justify-between pointer-events-auto transition-all duration-300">
         <Link
           href="/"
-          onMouseEnter={handleMouseEnterInteractive}
-          onMouseLeave={handleMouseLeaveInteractive}
           className="flex items-center gap-2 group"
         >
           {/* Lowercase logo 'sd' as specified in design brief */}
@@ -212,8 +148,6 @@ export default function StudioLandingPage() {
         <div className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/workbench"
-            onMouseEnter={handleMouseEnterInteractive}
-            onMouseLeave={handleMouseLeaveInteractive}
             className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-black/20 bg-white text-black font-mono text-xs uppercase tracking-wider hover:bg-black hover:text-white hover:border-black transition-all duration-300 shadow-sm"
           >
             <span>Enter Workbench</span>
@@ -224,8 +158,6 @@ export default function StudioLandingPage() {
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
-            onMouseEnter={handleMouseEnterInteractive}
-            onMouseLeave={handleMouseLeaveInteractive}
             className="w-10 h-10 rounded-full border border-black/20 bg-white text-black flex items-center justify-center hover:bg-black hover:text-white hover:border-black transition-all duration-300 shadow-sm cursor-pointer"
             aria-label="Toggle Studio Menu"
           >
@@ -265,9 +197,7 @@ export default function StudioLandingPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMenuOpen(false)}
-                    onMouseEnter={handleMouseEnterInteractive}
-                    onMouseLeave={handleMouseLeaveInteractive}
-                    className="flex items-baseline gap-4 md:gap-8 text-3xl md:text-6xl font-bold tracking-tighter hover:text-neutral-400 transition-colors duration-300"
+                                    className="flex items-baseline gap-4 md:gap-8 text-3xl md:text-6xl font-bold tracking-tighter hover:text-neutral-400 transition-colors duration-300"
                   >
                     <span className="font-mono text-sm md:text-xl text-neutral-500 font-normal">
                       {item.num}
@@ -279,9 +209,7 @@ export default function StudioLandingPage() {
                   <Link
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
-                    onMouseEnter={handleMouseEnterInteractive}
-                    onMouseLeave={handleMouseLeaveInteractive}
-                    className="flex items-baseline gap-4 md:gap-8 text-3xl md:text-6xl font-bold tracking-tighter hover:text-neutral-400 transition-colors duration-300"
+                                    className="flex items-baseline gap-4 md:gap-8 text-3xl md:text-6xl font-bold tracking-tighter hover:text-neutral-400 transition-colors duration-300"
                   >
                     <span className="font-mono text-sm md:text-xl text-neutral-500 font-normal">
                       {item.num}
@@ -343,8 +271,6 @@ export default function StudioLandingPage() {
         <div className="mt-12 flex flex-col sm:flex-row items-center gap-4 z-10">
           <Link
             href="/workbench"
-            onMouseEnter={handleMouseEnterInteractive}
-            onMouseLeave={handleMouseLeaveInteractive}
             className="px-8 py-4 rounded-full bg-[#000000] text-[#FFFFFF] font-medium text-sm tracking-tight hover:bg-neutral-800 transition-all duration-500 studio-ease flex items-center gap-2 group shadow-lg"
           >
             <span>Launch Live Workbench</span>
@@ -353,8 +279,6 @@ export default function StudioLandingPage() {
 
           <Link
             href="/workbench?tab=pdf"
-            onMouseEnter={handleMouseEnterInteractive}
-            onMouseLeave={handleMouseLeaveInteractive}
             className="px-8 py-4 rounded-full border border-black/10 text-black font-medium text-sm tracking-tight hover:border-black/40 hover:bg-black/5 transition-all duration-500 studio-ease flex items-center gap-2"
           >
             <FileText className="w-4 h-4 text-[#525252]" />
@@ -363,8 +287,6 @@ export default function StudioLandingPage() {
 
           <Link
             href="/arena"
-            onMouseEnter={handleMouseEnterInteractive}
-            onMouseLeave={handleMouseLeaveInteractive}
             className="px-6 py-4 font-mono text-xs uppercase tracking-widest text-[#525252] hover:text-black transition-colors duration-300 flex items-center gap-1.5"
           >
             <span className="w-2 h-2 rounded-full bg-[#2ea043] animate-pulse" />
@@ -399,9 +321,7 @@ export default function StudioLandingPage() {
               return (
                 <div
                   key={idx}
-                  onMouseEnter={handleMouseEnterInteractive}
-                  onMouseLeave={handleMouseLeaveInteractive}
-                  className={`w-72 md:w-80 aspect-[5/7] shrink-0 bg-gradient-to-b ${card.bgGradient} ${card.textColor} p-8 flex flex-col justify-between border border-black/10 shadow-sm relative group overflow-hidden ${radiusClass} transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105`}
+                              className={`w-72 md:w-80 aspect-[5/7] shrink-0 bg-gradient-to-b ${card.bgGradient} ${card.textColor} p-8 flex flex-col justify-between border border-black/10 shadow-sm relative group overflow-hidden ${radiusClass} transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-105`}
                 >
                   {/* Grayscale hover transition */}
                   <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -517,9 +437,7 @@ export default function StudioLandingPage() {
             <Link
               key={project.id}
               href={project.href}
-              onMouseEnter={handleMouseEnterInteractive}
-              onMouseLeave={handleMouseLeaveInteractive}
-              className="group block"
+                  className="group block"
             >
               {/* 4:3 Aspect Ratio Container with Slight Rounding */}
               <div className="aspect-[4/3] rounded-lg overflow-hidden relative bg-neutral-100 border border-black/10 flex flex-col justify-between p-8 md:p-10 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:border-black/30 shadow-sm">
@@ -619,9 +537,7 @@ export default function StudioLandingPage() {
                 <li>
                   <Link
                     href="/workbench"
-                    onMouseEnter={handleMouseEnterInteractive}
-                    onMouseLeave={handleMouseLeaveInteractive}
-                    className="hover:text-white transition-colors flex items-center justify-between group"
+                                    className="hover:text-white transition-colors flex items-center justify-between group"
                   >
                     <span>The Workbench</span>
                     <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -630,9 +546,7 @@ export default function StudioLandingPage() {
                 <li>
                   <Link
                     href="/arena"
-                    onMouseEnter={handleMouseEnterInteractive}
-                    onMouseLeave={handleMouseLeaveInteractive}
-                    className="hover:text-white transition-colors flex items-center justify-between group"
+                                    className="hover:text-white transition-colors flex items-center justify-between group"
                   >
                     <span>The Arena Leaderboard</span>
                     <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -641,9 +555,7 @@ export default function StudioLandingPage() {
                 <li>
                   <Link
                     href="/workbench?tab=pdf"
-                    onMouseEnter={handleMouseEnterInteractive}
-                    onMouseLeave={handleMouseLeaveInteractive}
-                    className="hover:text-white transition-colors flex items-center justify-between group"
+                                    className="hover:text-white transition-colors flex items-center justify-between group"
                   >
                     <span>PDF Resume Scanner</span>
                     <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -652,9 +564,7 @@ export default function StudioLandingPage() {
                 <li>
                   <Link
                     href="/method"
-                    onMouseEnter={handleMouseEnterInteractive}
-                    onMouseLeave={handleMouseLeaveInteractive}
-                    className="hover:text-white transition-colors flex items-center justify-between group"
+                                    className="hover:text-white transition-colors flex items-center justify-between group"
                   >
                     <span>Statistical Method</span>
                     <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -703,17 +613,13 @@ export default function StudioLandingPage() {
                 href="https://flagsmith.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                onMouseEnter={handleMouseEnterInteractive}
-                onMouseLeave={handleMouseLeaveInteractive}
-                className="hover:text-[#2ea043] transition-colors"
+                        className="hover:text-[#2ea043] transition-colors"
               >
                 Powered by Flagsmith
               </a>
               <Link
                 href="/workbench"
-                onMouseEnter={handleMouseEnterInteractive}
-                onMouseLeave={handleMouseLeaveInteractive}
-                className="text-white hover:underline"
+                        className="text-white hover:underline"
               >
                 Launch App →
               </Link>

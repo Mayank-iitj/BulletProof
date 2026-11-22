@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSessionId } from '@/lib/session';
+import { getSessionId, SESSION_COOKIE_NAME } from '@/lib/session';
 import { track } from '@/lib/tracker';
 import { db } from '@/lib/db';
 import { VARIANT_METADATA, VariantKey } from '@/lib/types';
 import crypto from 'crypto';
 
 const EventRequestSchema = z.object({
-  type: z.enum(['bullet_copied', 'regenerate_clicked', 'rating_submitted']),
+  type: z.enum([
+    'bullet_copied',
+    'regenerate_clicked',
+    'rating_submitted',
+    'session_started',
+    'resume_uploaded',
+  ]),
   rewriteId: z.string().optional(),
   suggestionId: z.string().optional(),
   props: z.record(z.any()).optional(),
@@ -17,7 +23,7 @@ export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
 
   try {
-    const { sessionId } = await getSessionId(req);
+    const { sessionId, isNew } = await getSessionId(req);
 
     let body: any;
     try {
@@ -79,10 +85,22 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    return NextResponse.json(responseData, {
+    const response = NextResponse.json(responseData, {
       status: 200,
       headers: { 'x-request-id': requestId },
     });
+
+    if (isNew) {
+      response.cookies.set(SESSION_COOKIE_NAME, sessionId, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    }
+
+    return response;
   } catch (err: any) {
     console.error('[API /api/events] Error:', err);
     return NextResponse.json(
