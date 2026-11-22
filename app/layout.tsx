@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { CustomCursor } from '@/components/CustomCursor';
 
 export const metadata: Metadata = {
   title: 'BulletProof — The Resume Bullet Rewriter that A/B Tests Itself',
@@ -30,6 +31,7 @@ export default function RootLayout({
         suppressHydrationWarning
         data-dashlane-ignore="true"
       >
+        <CustomCursor />
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
