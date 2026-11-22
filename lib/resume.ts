@@ -135,6 +135,18 @@ export function analyzeResumeText(rawText: string, fileName = 'resume.pdf', page
     const isBulletSymbol = /^[\u2022\u2023\u25E6\u2043\u2219\*\-\–\—\>]\s*/.test(line);
     const cleanedText = line.replace(/^[\u2022\u2023\u25E6\u2043\u2219\*\-\–\—\>]\s*/, '').trim();
 
+    // Filter out subtitle tech stack tags (e.g. "Supervised Learning, Data Analysis", "NLP, Machine Learning")
+    const isTechSubtitle =
+      !isBulletSymbol &&
+      cleanedText.includes(',') &&
+      cleanedText.split(/\s+/).length <= 6 &&
+      !/[.!?]$/.test(cleanedText) &&
+      !/\b(?:by|with|using|across|from|into|for|to)\b/i.test(cleanedText);
+
+    if (isTechSubtitle) {
+      continue;
+    }
+
     if (cleanedText.length >= 15 && cleanedText.length <= 400) {
       if (isBulletSymbol) {
         rawBullets.push({ text: cleanedText, section: currentSection });
@@ -186,15 +198,15 @@ export function analyzeResumeText(rawText: string, fileName = 'resume.pdf', page
       issue = 'Passive opener & zero quantified outcome';
       recommendation = 'Rewrite with strong action verb + metric: Action + Context + [X%] Result.';
       criticalCount++;
-    } else if (!hasMetric) {
-      severity = 'critical';
-      issue = 'Missing quantifiable metrics or business impact';
-      recommendation = 'Add quantifiable scale: users served, % latency drop, or time saved.';
-      criticalCount++;
     } else if (hasWeakOpener) {
-      severity = 'warning';
+      severity = 'critical';
       issue = 'Starts with weak or passive opener';
       recommendation = 'Replace passive opener (e.g. "Worked on") with an engineering verb (e.g. "Architected").';
+      criticalCount++;
+    } else if (!hasMetric) {
+      severity = 'warning';
+      issue = 'Active framing, but missing quantifiable metrics';
+      recommendation = 'Add quantifiable scale: users served, % latency drop, or time saved.';
       warningCount++;
     } else if (isTooShort) {
       severity = 'warning';
@@ -230,6 +242,7 @@ export function analyzeResumeText(rawText: string, fileName = 'resume.pdf', page
 
   // Keyword scoring for role detection
   const roleScores: Record<string, number> = {
+    'AI & Data Engineer': 0,
     'Backend Engineer': 0,
     'Frontend Developer': 0,
     'Product Manager': 0,
@@ -239,10 +252,22 @@ export function analyzeResumeText(rawText: string, fileName = 'resume.pdf', page
   const lower = rawText.toLowerCase();
   const testKeywords = (words: string[]) => words.reduce((acc, w) => acc + (lower.includes(w) ? 1 : 0), 0);
 
+  roleScores['AI & Data Engineer'] = testKeywords([
+    'ai & data engineering',
+    'machine learning',
+    'data analytics',
+    'computer vision',
+    'nlp',
+    'predictive models',
+    'streamlit',
+    'statistical modeling',
+    'data science',
+    'feature engineering',
+  ]);
   roleScores['Backend Engineer'] = testKeywords(['backend', 'microservices', 'distributed', 'redis', 'database', 'postgres', 'golang', 'api throughput', 'sql']);
   roleScores['Frontend Developer'] = testKeywords(['frontend', 'react', 'next.js', 'tailwindcss', 'css3', 'redux', 'ui components', 'responsive design']);
   roleScores['Product Manager'] = testKeywords(['product manager', 'roadmap', 'kpis', 'stakeholder', 'user research', 'prds']);
-  roleScores['Data Scientist'] = testKeywords(['data scientist', 'machine learning', 'deep learning', 'pandas', 'numpy', 'pytorch', 'tensorflow']);
+  roleScores['Data Scientist'] = testKeywords(['data scientist', 'deep learning', 'pandas', 'numpy', 'pytorch', 'tensorflow']);
 
   let detectedRole = 'Backend Engineer';
   let maxScore = 0;
