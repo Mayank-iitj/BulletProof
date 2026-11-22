@@ -1,7 +1,84 @@
 {
-  "sessions": [],
-  "rewrites": [],
-  "events": [],
-  "budget_ledger": {},
+  "sessions": [
+    {
+      "id": "af16c0bb-54f4-4a59-9709-0a5d5a1d453f",
+      "created_at": "2026-11-22T03:25:36.507Z",
+      "source": "localhost",
+      "device": "desktop",
+      "variant": "concise",
+      "first_exposed_at": "2026-11-22T03:25:36.507Z"
+    }
+  ],
+  "rewrites": [
+    {
+      "id": "65f63f82-77fe-4510-a303-cda72ebb18ea",
+      "session_id": "af16c0bb-54f4-4a59-9709-0a5d5a1d453f",
+      "variant": "concise",
+      "input_len": 102,
+      "input_hash": "edd5a8d084358968372f7947e5f47513f53a60df173dd8e7d073a2c4ce14ca2e",
+      "output_len": 492,
+      "latency_ms": 288,
+      "model": "claude-haiku-5-5 (fallback-engine)",
+      "tokens_in": 176,
+      "tokens_out": 123,
+      "cost_usd": 0.00045,
+      "created_at": "2026-11-22T03:25:36.800Z"
+    },
+    {
+      "id": "9ffa6acb-d83d-4cf1-9825-f8646345e828",
+      "session_id": "af16c0bb-54f4-4a59-9709-0a5d5a1d453f",
+      "variant": "concise",
+      "input_len": 102,
+      "input_hash": "edd5a8d084358968372f7947e5f47513f53a60df173dd8e7d073a2c4ce14ca2e",
+      "output_len": 515,
+      "latency_ms": 284,
+      "model": "claude-haiku-5-5 (fallback-engine)",
+      "tokens_in": 176,
+      "tokens_out": 129,
+      "cost_usd": 0.00045,
+      "created_at": "2026-11-22T03:25:43.749Z"
+    }
+  ],
+  "events": [
+    {
+      "session_id": "af16c0bb-54f4-4a59-9709-0a5d5a1d453f",
+      "rewrite_id": "65f63f82-77fe-4510-a303-cda72ebb18ea",
+      "type": "rewrite_generated",
+      "variant": "concise",
+      "props": {
+        "role": null,
+        "latencyMs": 288
+      },
+      "id": "ff283b53-be8e-42c0-8642-d7857492a16e",
+      "created_at": "2026-11-22T03:25:36.807Z"
+    },
+    {
+      "session_id": "af16c0bb-54f4-4a59-9709-0a5d5a1d453f",
+      "rewrite_id": "9ffa6acb-d83d-4cf1-9825-f8646345e828",
+      "type": "rewrite_generated",
+      "variant": "concise",
+      "props": {
+        "role": "Full Stack Engineer",
+        "latencyMs": 284
+      },
+      "id": "192bac08-e34b-4256-8984-558b07a216f8",
+      "created_at": "2026-11-22T03:25:43.755Z"
+    },
+    {
+      "session_id": "af16c0bb-54f4-4a59-9709-0a5d5a1d453f",
+      "rewrite_id": "9ffa6acb-d83d-4cf1-9825-f8646345e828",
+      "type": "rating_submitted",
+      "variant": "concise",
+      "props": {
+        "suggestionId": "s1",
+        "value": "up"
+      },
+      "id": "53a514ca-fb3f-454a-81c2-6e6767726e18",
+      "created_at": "2026-11-22T03:25:51.690Z"
+    }
+  ],
+  "budget_ledger": {
+    "2026-11-22": 0.0009
+  },
   "rewrite_text": {}
 }
