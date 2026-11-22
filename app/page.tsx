@@ -192,8 +192,8 @@ export default function StudioLandingPage() {
         />
       )}
 
-      {/* 2. Fixed Navigation Header (mix-blend-mode: difference for visibility against all backgrounds) */}
-      <header className="fixed top-0 left-0 right-0 z-50 p-6 mix-blend-mode-difference flex items-center justify-between pointer-events-auto">
+      {/* 2. Fixed Navigation Header (Always visible with high-contrast text & subtle backdrop blur) */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-white/90 backdrop-blur-md border-b border-black/10 flex items-center justify-between pointer-events-auto transition-all duration-300">
         <Link
           href="/"
           onMouseEnter={handleMouseEnterInteractive}
@@ -201,10 +201,10 @@ export default function StudioLandingPage() {
           className="flex items-center gap-2 group"
         >
           {/* Lowercase logo 'sd' as specified in design brief */}
-          <span className="text-2xl font-bold tracking-tighter text-white lowercase">
+          <span className="text-2xl font-bold tracking-tighter text-black lowercase">
             sd
           </span>
-          <span className="hidden sm:inline-block font-mono text-xs uppercase tracking-[0.1em] text-white/70 ml-2">
+          <span className="hidden sm:inline-block font-mono text-xs uppercase tracking-[0.1em] text-neutral-500 ml-2">
             / BulletProof Studio
           </span>
         </Link>
@@ -214,7 +214,7 @@ export default function StudioLandingPage() {
             href="/workbench"
             onMouseEnter={handleMouseEnterInteractive}
             onMouseLeave={handleMouseLeaveInteractive}
-            className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-white/30 text-white font-mono text-xs uppercase tracking-wider hover:bg-white hover:text-black transition-all duration-500 studio-ease"
+            className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-black/20 bg-white text-black font-mono text-xs uppercase tracking-wider hover:bg-black hover:text-white hover:border-black transition-all duration-300 shadow-sm"
           >
             <span>Enter Workbench</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
@@ -226,7 +226,7 @@ export default function StudioLandingPage() {
             onClick={() => setMenuOpen(!menuOpen)}
             onMouseEnter={handleMouseEnterInteractive}
             onMouseLeave={handleMouseLeaveInteractive}
-            className="w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white hover:border-white transition-all duration-300"
+            className="w-10 h-10 rounded-full border border-black/20 bg-white text-black flex items-center justify-center hover:bg-black hover:text-white hover:border-black transition-all duration-300 shadow-sm cursor-pointer"
             aria-label="Toggle Studio Menu"
           >
             {menuOpen ? (
