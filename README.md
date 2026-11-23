@@ -81,7 +81,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser:
 ```bash
 npm test
 ```
-Runs 33 comprehensive unit, security, integration, and statistical integrity tests.
+Runs 39 comprehensive unit, security, integration, and statistical integrity tests.
 
 ---
 
