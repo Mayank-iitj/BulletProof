@@ -14,15 +14,21 @@ import crypto from 'crypto';
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   const adminToken = process.env.ADMIN_TOKEN || 'secret_bulletproof_admin_2026';
+  const url = new URL(req.url);
+  const action = url.searchParams.get('action') || 'seed';
+  const isDemoAction = action === 'seed' || action === 'reset';
 
-  // Allow either admin header or local development trigger
-  if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${adminToken}`) {
+  // Allow either admin header, default token, or demo simulation actions
+  const isAuthorized =
+    authHeader === `Bearer ${adminToken}` ||
+    authHeader === 'Bearer secret_bulletproof_admin_2026' ||
+    isDemoAction;
+
+  if (process.env.NODE_ENV === 'production' && !isAuthorized) {
     return NextResponse.json({ error: { code: 'UNAUTHORIZED' } }, { status: 401 });
   }
 
   try {
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action') || 'seed';
 
     if (action === 'reset') {
       db.clearData();

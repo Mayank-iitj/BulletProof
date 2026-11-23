@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { analyzeResumeText } from '../lib/resume';
+import { analyzeResumeText, extractTextFromPDF } from '../lib/resume';
+import zlib from 'zlib';
 
 const SAMPLE_RESUME_TEXT = `
 Mayank Sharma
@@ -64,5 +65,17 @@ describe('PDF Resume Extraction & Diagnostic Engine', () => {
     const analysis = analyzeResumeText(SAMPLE_RESUME_TEXT, 'mayank_resume.pdf', 1);
     expect(analysis.overallScore).toBeGreaterThanOrEqual(15);
     expect(analysis.overallScore).toBeLessThanOrEqual(95);
+  });
+
+  it('extracts text from simulated compressed FlateDecode PDF stream', async () => {
+    // Generate a simulated minimal PDF with compressed stream
+    const content = '(Mayank Sharma) Tj\n[(Engineered distributed backend)] TJ';
+    const compressed = zlib.deflateSync(Buffer.from(content, 'utf-8'));
+    const pdfRaw = `%PDF-1.4\nstream\n${compressed.toString('latin1')}\nendstream\n%%EOF`;
+    const pdfBuffer = Buffer.from(pdfRaw, 'latin1');
+
+    const result = await extractTextFromPDF(pdfBuffer);
+    expect(result.text).toContain('Mayank Sharma');
+    expect(result.text).toContain('Engineered distributed backend');
   });
 });

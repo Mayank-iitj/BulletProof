@@ -1,4 +1,5 @@
 import { extractText } from 'unpdf';
+import zlib from 'zlib';
 
 export interface ExtractedBullet {
   id: string;
@@ -59,36 +60,66 @@ const SECTION_HEADERS: Record<string, RegExp> = {
 };
 
 /**
- * Parses raw text from a PDF Buffer with primary unpdf extraction and resilient regex fallback
+ * Parses raw text from a PDF Buffer with primary unpdf extraction and resilient Flate stream decompression fallback
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<{ text: string; pageCount: number }> {
+  // 1. Primary extraction with unpdf
   try {
-    const res = await extractText(buffer);
+    const uint8 = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    const res = await extractText(uint8);
     const combinedText = Array.isArray(res.text) ? res.text.join('\n') : (res.text || '');
     const pageCount = res.totalPages || 1;
 
-    if (combinedText.trim().length > 0) {
+    if (combinedText.trim().length >= 10) {
       return { text: combinedText, pageCount };
     }
   } catch (err) {
-    console.warn('[extractTextFromPDF] unpdf primary extraction encountered error, attempting fallback:', err);
+    console.warn('[extractTextFromPDF] unpdf primary extraction encountered error, attempting flate fallback:', err);
   }
 
-  // Resilient fallback for raw uncompressed PDF streams
+  // 2. Resilient fallback: Decompress and parse all FlateDecode streams
   try {
-    const raw = buffer.toString('latin1');
-    const matches: string[] = [];
-    const tjRegex = /\(([^()]+)\)\s*Tj/g;
+    const textMatches: string[] = [];
+    const str = buffer.toString('latin1');
+    const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
     let match: RegExpExecArray | null;
-    while ((match = tjRegex.exec(raw)) !== null) {
-      matches.push(match[1]);
+
+    while ((match = streamRegex.exec(str)) !== null) {
+      const rawStream = Buffer.from(match[1], 'latin1');
+      let decompressed = '';
+      try {
+        decompressed = zlib.inflateSync(rawStream).toString('utf-8');
+      } catch {
+        try {
+          decompressed = zlib.unzipSync(rawStream).toString('utf-8');
+        } catch {
+          decompressed = rawStream.toString('utf-8');
+        }
+      }
+
+      // Extract Tj text objects
+      const tjRegex = /\(([^()]+)\)\s*Tj/g;
+      let m: RegExpExecArray | null;
+      while ((m = tjRegex.exec(decompressed)) !== null) {
+        textMatches.push(m[1]);
+      }
+
+      // Extract TJ text array objects
+      const tjArrayRegex = /\[([^\]]+)\]\s*TJ/g;
+      while ((m = tjArrayRegex.exec(decompressed)) !== null) {
+        const parts = m[1].match(/\(([^()]+)\)/g);
+        if (parts) {
+          textMatches.push(parts.map((p) => p.slice(1, -1)).join(''));
+        }
+      }
     }
 
-    if (matches.length > 0) {
-      return { text: matches.join(' '), pageCount: 1 };
+    const combined = textMatches.join(' ').replace(/\s+/g, ' ').trim();
+    if (combined.length >= 10) {
+      return { text: combined, pageCount: 1 };
     }
-  } catch {
-    // Ignore fallback error
+  } catch (fallbackErr) {
+    console.warn('[extractTextFromPDF] Stream fallback encountered error:', fallbackErr);
   }
 
   return { text: '', pageCount: 1 };

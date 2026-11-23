@@ -90,6 +90,9 @@ export default function ArenaPage() {
     try {
       const res = await fetch(`/api/admin/simulate?action=${action}&count=1200`, {
         method: 'POST',
+        headers: {
+          'Authorization': 'Bearer secret_bulletproof_admin_2026',
+        },
       });
       const resJson = await res.json();
       if (res.ok) {

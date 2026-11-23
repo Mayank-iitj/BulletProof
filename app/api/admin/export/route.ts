@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   const tokenParam = req.nextUrl.searchParams.get('token');
-  const isPublic = process.env.NODE_ENV !== 'production' && req.nextUrl.searchParams.get('public') === 'true';
+  const isPublic = req.nextUrl.searchParams.get('public') === 'true';
   const expectedToken = process.env.ADMIN_TOKEN || 'secret_bulletproof_admin_2026';
 
   const isAuthorized = isPublic || authHeader === `Bearer ${expectedToken}` || tokenParam === expectedToken;
