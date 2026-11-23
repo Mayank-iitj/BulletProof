@@ -1,5 +1,6 @@
 import { EventType, VariantKey } from './types';
 import { db } from './db';
+import { trackFlagsmithConversion } from './flags';
 
 export interface TrackPayload {
   type: EventType;
@@ -27,7 +28,14 @@ export async function track(e: TrackPayload): Promise<void> {
       props: e.props || {},
     });
 
-    // 2. Best-effort forward to Flagsmith Experimentation & Identity Traits
+    // 2. Forward conversion event to Flagsmith Experimentation Warehouse
+    if (e.type === 'bullet_copied' || e.type === 'regenerate_clicked' || e.type === 'rating_submitted') {
+      trackFlagsmithConversion(e.type, e.sessionId).catch((err) => {
+        console.debug('[Tracker] Flagsmith trackEvent error:', err);
+      });
+    }
+
+    // 3. Best-effort forward to Flagsmith Identity Traits
     const envKey = process.env.FLAGSMITH_SERVER_KEY || process.env.FLAGSMITH_ENVIRONMENT_KEY || process.env.NEXT_PUBLIC_FLAGSMITH_KEY;
     const apiUrl = process.env.FLAGSMITH_API_URL || 'https://edge.api.flagsmith.com/api/v1/';
 

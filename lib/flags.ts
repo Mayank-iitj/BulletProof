@@ -61,6 +61,48 @@ export interface EvaluationTraits {
   first_seen?: string;
 }
 
+let flagsmithClientInstance: any = null;
+
+async function getFlagsmithClient(envKey: string, apiUrl: string) {
+  if (!flagsmithClientInstance) {
+    const { Flagsmith } = await import('@flagsmith/nodejs');
+    flagsmithClientInstance = new Flagsmith({
+      environmentKey: envKey,
+      apiUrl,
+      enableEvents: true,
+      requestTimeoutSeconds: 3,
+    });
+  }
+  return flagsmithClientInstance;
+}
+
+export async function trackFlagsmithConversion(
+  eventName: string,
+  identifier: string,
+  value?: number
+) {
+  const envKey =
+    process.env.FLAGSMITH_SERVER_KEY ||
+    process.env.FLAGSMITH_ENVIRONMENT_KEY ||
+    process.env.NEXT_PUBLIC_FLAGSMITH_KEY;
+  const apiUrl = process.env.FLAGSMITH_API_URL || 'https://edge.api.flagsmith.com/api/v1/';
+
+  if (!envKey) return;
+
+  try {
+    const client = await getFlagsmithClient(envKey, apiUrl);
+    if (client && typeof client.trackEvent === 'function') {
+      const payload: { identifier: string; value?: number } = { identifier };
+      if (typeof value === 'number') payload.value = value;
+      client.trackEvent(eventName, payload);
+      // Flush events periodically or in background
+      client.flushEvents?.().catch(() => {});
+    }
+  } catch (err: any) {
+    console.warn('[Flagsmith] Failed to record conversion event:', err?.message || err);
+  }
+}
+
 /**
  * Server-side flag evaluation using Flagsmith Node SDK or resilient fallback.
  * Strictly non-blocking: never fails the request if Flagsmith is down.
@@ -105,17 +147,22 @@ export async function evaluateFlags(
   }
 
   try {
-    // Dynamic import to avoid SSR bundling issues
-    const { Flagsmith } = await import('flagsmith-nodejs');
-    const flagsmith = new Flagsmith({
-      environmentKey: envKey,
-      apiUrl,
-    });
+    const flagsmith = await getFlagsmithClient(envKey, apiUrl);
 
-    // Evaluate flags for this identity
+    // Evaluate experiment flag for this identity (records experiment exposure event)
+    let styleVal: string | null = null;
+    try {
+      const expFlag = await flagsmith.getExperimentFlag('rewrite_style', sessionId, traits as any);
+      if (expFlag && expFlag.value) {
+        styleVal = String(expFlag.value);
+      }
+    } catch {
+      // Fallback to identityFlags if getExperimentFlag fails
+    }
+
     const identityFlags = await flagsmith.getIdentityFlags(sessionId, traits as any);
 
-    let style = (identityFlags.getFeatureValue('rewrite_style') as string) || 'concise';
+    let style = styleVal || (identityFlags.getFeatureValue('rewrite_style') as string) || 'concise';
     if (!['concise', 'impact', 'story'].includes(style)) {
       style = deterministicVariantHash(sessionId);
     }
